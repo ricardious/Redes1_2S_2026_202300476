@@ -1,0 +1,151 @@
+! =============================================================================
+! SW-CORE-DC   -   Cisco Catalyst 3650-24PS   -   Centro de Datos (Nucleo)
+! Rol: switch central del campus. VTP SERVER. Root Bridge de todas las VLAN
+!      del campus (la VLAN 56 tiene su propia raiz local en SW-ACC-VIS).
+! Extremo de los tres EtherChannel: Po1 (I+D), Po2 (granja), Po3 (Corporativo).
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+!
+! Transcrito de "show running-config" del equipo en ejecucion. Se omiten las
+! 19 interfaces sin usar, todas con "description NO USADO - deshabilitado por
+! politica" + "shutdown".
+! =============================================================================
+version 16.3.2
+!
+hostname SW-CORE-DC
+!
+spanning-tree mode pvst
+spanning-tree vlan 1,16,26,36,46,96,99 priority 24576
+!
+interface Port-channel1
+ description Po1 LACP 4x a SW-DIST-IDD (Centro de I+D)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+!
+interface Port-channel2
+ description Po2 LACP 2x a SW-ACC-SRV (granja de servidores)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+!
+interface Port-channel3
+ description Po3 LACP 2x a SW-DIST-CORP (Edificio Corporativo)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/1
+ description Po2 LACP a SW-ACC-SRV
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/0/2
+ description Po2 LACP a SW-ACC-SRV
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/0/5
+ description TRUNK a SW-DIST-PROD (Planta de Produccion)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 36,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/7
+ description Po3 LACP a SW-DIST-CORP
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface GigabitEthernet1/0/8
+ description Po3 LACP a SW-DIST-CORP
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface GigabitEthernet1/1/1
+ description Po1 LACP a SW-DIST-IDD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/1/2
+ description Po1 LACP a SW-DIST-IDD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/1/3
+ description Po1 LACP a SW-DIST-IDD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/1/4
+ description Po1 LACP a SW-DIST-IDD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.1 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! -----------------------------------------------------------------------------
+! NOTAS
+!
+! 1) Los comandos VTP no aparecen en el running-config de Packet Tracer para los
+!    modos Server y Client; se verifican con "show vtp status"
+!    (docs/evidencias/01-vtp-status.txt):
+!        vtp domain Smart_7
+!        vtp password proyecto12S2026
+!        vtp mode server
+!
+! 2) VLANs creadas en este switch y propagadas por VTP a todo el dominio:
+!        vlan 16  name GERENCIA
+!        vlan 26  name INVESTIGACION
+!        vlan 36  name PRODUCCION
+!        vlan 46  name SERVIDORES
+!        vlan 56  name VISITANTES
+!        vlan 96  name NATIVA
+!        vlan 99  name ADMINISTRACION
+!
+! 3) Los miembros de los EtherChannel NO fijan "speed" ni "duplex". Se verifico
+!    que los canales agregan igual sin esos comandos; lo que Cisco exige es que
+!    velocidad y duplex COINCIDAN entre miembros, no que se configuren a mano.
+!
+! 4) La VLAN 1 esta podada de los cuatro troncales. El trafico del plano de
+!    control (VTP, CDP, DTP) sigue funcionando: se comprobo capturando una trama
+!    VTP etiquetada en VLAN 1 cruzando Po2, cuya lista permitida es 46,96,99
+!    (docs/evidencias/07-analisis-tramas-simulacion.txt, apartado B.4).
+! -----------------------------------------------------------------------------
