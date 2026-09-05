@@ -1,0 +1,83 @@
+! =============================================================================
+! SW-DIST-CORP  -  Cisco Catalyst 3650-24PS  -  Edificio Corporativo (distrib.)
+! Rol: VTP CLIENT. Root Bridge secundario de la VLAN 16.
+!      Extremo del EtherChannel Po3 hacia el nucleo.
+!      Aqui nace el troncal AISLADO que alimenta el segmento de visitantes.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+!
+! Transcrito de "show running-config". Se omiten las 23 interfaces sin usar,
+! todas con "description NO USADO - deshabilitado por politica" + "shutdown".
+! =============================================================================
+version 16.3.2
+!
+hostname SW-DIST-CORP
+!
+spanning-tree mode pvst
+spanning-tree vlan 16 priority 28672
+!
+interface Port-channel3
+ description Po3 LACP 2x a SW-CORE-DC
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/3
+ description TRUNK a SW-ACC-CORP-A (Ala A)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/4
+ description TRUNK a SW-ACC-CORP-B (Ala B)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/5
+ description TRUNK AISLADO a SW-ACC-VIS (solo VLAN 56)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 56,96
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface GigabitEthernet1/0/6
+ description Po3 LACP a SW-CORE-DC
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface GigabitEthernet1/0/7
+ description Po3 LACP a SW-CORE-DC
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.21 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! -----------------------------------------------------------------------------
+! VTP:  vtp domain Smart_7 / vtp password proyecto12S2026 / vtp mode client
+!
+! Gi1/0/5 permite UNICAMENTE las VLAN 56 y 96, mientras que Po3 (hacia el
+! nucleo) NO permite la 56: el trafico de invitados no sale del edificio.
+! Notese ademas que Gi1/0/5 tampoco transporta la VLAN 99, de modo que el plano
+! de gestion del campus no alcanza el segmento de visitantes.
+! -----------------------------------------------------------------------------
