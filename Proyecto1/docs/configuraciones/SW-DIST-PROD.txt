@@ -1,0 +1,50 @@
+! =============================================================================
+! SW-DIST-PROD  -  Cisco Catalyst 3560-24PS  -  Planta de Produccion (distrib.)
+! Rol: VTP CLIENT. Root Bridge secundario de la VLAN 36.
+! Es el unico Catalyst 3560 del diseno. Esa plataforma soporta ISL ademas de
+! 802.1Q, por lo que exige declarar la encapsulacion con
+! "switchport trunk encapsulation dot1q" antes de "switchport mode trunk".
+! En los 3650 y 2960 de Packet Tracer ese comando devuelve "invalid input"
+! porque solo implementan 802.1Q.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+! Se omiten las 24 interfaces sin usar (description NO USADO + shutdown).
+! =============================================================================
+version 12.2(37)SE1
+!
+hostname SW-DIST-PROD
+!
+spanning-tree mode pvst
+spanning-tree vlan 36 priority 28672
+!
+interface FastEthernet0/1
+ description TRUNK a SW-ACC-PROD
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 36,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/1
+ description TRUNK a SW-CORE-DC
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 36,96,99
+ switchport mode trunk
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.31 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! VTP:  vtp domain Smart_7 / vtp password proyecto12S2026 / vtp mode client
