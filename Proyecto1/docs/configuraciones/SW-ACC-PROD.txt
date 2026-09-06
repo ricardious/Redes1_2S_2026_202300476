@@ -1,0 +1,72 @@
+! =============================================================================
+! SW-ACC-PROD  -  Cisco Catalyst 2960-24TT  -  Planta de Produccion (acceso)
+! Rol: VTP CLIENT. Aqui se conecta el HUB del segmento Legacy (Fa0/10) con las
+!      medidas de contencion del dominio de colision compartido.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+! Se omiten las 22 interfaces sin usar (description NO USADO + shutdown).
+! =============================================================================
+version 12.2
+!
+hostname SW-ACC-PROD
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ description Estaciones modernas de planta
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/2
+ description Estaciones modernas de planta
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/10
+ description SEGMENTO LEGACY - HUB (dominio de colision compartido)
+ switchport access vlan 36
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 4
+ switchport port-security violation restrict
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ storm-control broadcast level 20
+!
+interface FastEthernet0/24
+ description TRUNK a SW-DIST-PROD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 36,96,99
+ switchport mode trunk
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.32 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! VTP:  vtp domain Smart_7 / vtp password proyecto12S2026 / vtp mode client
+!
+! Alcance real de cada medida de Fa0/10 (detalle en docs/evidencias/05):
+!   - "switchport mode access": acota el dominio de colision a este puerto.
+!   - "storm-control broadcast level 20": limita el broadcast que el switch
+!     reenvia; NO reduce las colisiones dentro del hub.
+!   - "port-security maximum 4": limita CUANTAS MAC acepta el puerto, NO CUALES.
+!     No hay direcciones estaticas ni sticky configuradas, asi que no autoriza
+!     equipos concretos.
+!   - "bpduguard": complemento recomendado de portfast, no obligatorio.
