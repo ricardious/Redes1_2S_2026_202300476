@@ -1,0 +1,84 @@
+! =============================================================================
+! SW-ACC-SRV   -   Cisco Catalyst 3650-24PS   -   Granja de servidores criticos
+! Rol: VTP CLIENT. Root Bridge secundario de la VLAN 46. Extremo de Po2.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+! Se omiten las 22 interfaces sin usar (description NO USADO + shutdown).
+! =============================================================================
+version 16.3.2
+!
+hostname SW-ACC-SRV
+!
+spanning-tree mode pvst
+spanning-tree vlan 46 priority 28672
+!
+interface Port-channel2
+ description Po2 LACP 2x a SW-CORE-DC (granja de servidores)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/1
+ description Po2 LACP a SW-CORE-DC
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/0/2
+ description Po2 LACP a SW-CORE-DC
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 46,96,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/0/3
+ description Granja de servidores criticos
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/4
+ description Granja de servidores criticos
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/5
+ description Granja de servidores criticos
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/6
+ description Granja de servidores criticos
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.2 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! VTP:  vtp domain Smart_7 / vtp password proyecto12S2026 / vtp mode client
+! Prueba de resiliencia del canal: apagando Gi1/0/2 en el nucleo, Po2 sigue
+! (SU) con un solo miembro y el trafico no se interrumpe
+! (docs/evidencias/02-etherchannel.txt).
