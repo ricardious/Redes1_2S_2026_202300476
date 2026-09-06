@@ -1,0 +1,73 @@
+! =============================================================================
+! SW-ACC-VIS  -  Cisco Catalyst 2960-24TT  -  Areas Comunes / Visitantes
+! Rol: VTP TRANSPARENT. Es el unico switch del campus que administra sus propias
+!      VLAN. Root Bridge de la VLAN 56. Sin SVI de gestion, a proposito.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+! Se omiten las 24 interfaces sin usar (description NO USADO + shutdown).
+! =============================================================================
+version 12.2
+!
+hostname SW-ACC-VIS
+!
+vtp domain Smart_7
+vtp mode transparent
+vtp password proyecto12S2026
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+spanning-tree vlan 56 priority 24576
+!
+vlan 56
+ name VISITANTES
+!
+vlan 96
+ name NATIVA
+!
+interface FastEthernet0/1
+ description AP-VISITANTES (Areas Comunes)
+ switchport access vlan 56
+ switchport mode access
+ spanning-tree portfast
+!
+interface FastEthernet0/24
+ description TRUNK AISLADO a SW-DIST-CORP (solo VLAN 56)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 56,96
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+line con 0
+!
+line vty 0 4
+ login
+!
+end
+
+! -----------------------------------------------------------------------------
+! POR QUE ESTE SWITCH SI MUESTRA "vtp ..." Y "vlan 56 / vlan 96" EN EL
+! RUNNING-CONFIG Y LOS DEMAS NO
+!
+! Un switch en modo TRANSPARENT guarda su base de datos de VLAN en la
+! configuracion local, no la sincroniza con el dominio VTP. Los switches Server
+! y Client toman las VLAN del dominio y por eso no aparecen en su running-config.
+! Esa diferencia es, por si sola, la evidencia de que la administracion de VLAN
+! de las Areas Comunes esta separada de la del resto del campus:
+!     show vtp status  ->  revision 0, 7 VLANs, MD5 distinto al del dominio.
+!
+! PRECISION: "transparente" significa que NO sincroniza su base de datos y NO
+! origina actualizaciones propias. NO significa que sea incapaz de reenviar
+! anuncios: la documentacion de Cisco indica que en VTP version 2 un switch
+! transparente SI reenvia por sus troncales los anuncios que recibe. Aqui el
+! dominio corre VTP version 1 y, ademas, este switch es una hoja de la
+! topologia: no hay ningun switch detras de el.
+!
+! Este switch NO tiene SVI de gestion: se administra por consola. Es la tercera
+! capa del aislamiento del segmento de visitantes, junto con el modo
+! transparente y la poda de VLAN del troncal Gi1/0/5 de SW-DIST-CORP.
+! -----------------------------------------------------------------------------
