@@ -1,0 +1,127 @@
+================================================================================
+EVIDENCIA 1 - VTP (dominio Smart_7)
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Capturado desde Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+$ SW-CORE-DC# show vtp status
+VTP Version capable             : 1 to 2
+VTP version running             : 1
+VTP Domain Name                 : Smart_7
+VTP Pruning Mode                : Disabled
+VTP Traps Generation            : Disabled
+Device ID                       : 0002.1600.CB00
+Configuration last modified by 192.168.99.1 at 3-1-93 00:03:40
+Local updater ID is 192.168.99.1 on interface Vl99 (lowest numbered VLAN interface found)
+
+Feature VLAN :
+--------------
+VTP Operating Mode                : Server
+Maximum VLANs supported locally   : 1005
+Number of existing VLANs          : 12
+Configuration Revision            : 35
+MD5 digest                        : 0x54 0x67 0xC0 0xF4 0x43 0x9D 0x0C 0x03
+                                    0xD5 0x03 0x00 0xDC 0xE1 0x9B 0xC7 0x38
+
+    --> Unico VTP Server del dominio. "Configuration last modified by
+        192.168.99.1" lo identifica como el equipo que modifica la base de datos.
+
+================================================================================
+
+$ SW-ACC-IDD-1# show vtp status
+VTP Version                     : 1
+Configuration Revision          : 35
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 12
+VTP Operating Mode              : Client
+VTP Domain Name                 : Smart_7
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0x54 0x67 0xC0 0xF4 0x43 0x9D 0x0C 0x03
+Configuration last modified by 192.168.99.1 at 3-1-93 00:03:40
+
+    --> Misma revision (35), mismo numero de VLANs (12) y mismo MD5 digest que
+        el servidor: la propagacion VTP y la contrasena del dominio son
+        correctas.
+
+================================================================================
+ESTADO DEL DOMINIO COMPLETO
+================================================================================
+
+Los 10 switches en modo Server/Client convergieron al mismo estado:
+
+    Switch            Modo          Revision   VLANs   MD5 (primeros 5 bytes)
+    ----------------  ------------  --------   -----   ----------------------
+    SW-CORE-DC        Server              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-SRV        Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-DIST-IDD       Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-IDD-1      Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-IDD-2      Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-DIST-CORP      Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-CORP-A     Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-CORP-B     Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-DIST-PROD      Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    SW-ACC-PROD       Client              35      12   0x54 0x67 0xC0 0xF4 0x43
+    ----------------  ------------  --------   -----   ----------------------
+    SW-ACC-VIS        Transparent          0       7   0xE9 0x79 0x84 0xAB 0x04
+
+================================================================================
+EL SWITCH AISLADO: SW-ACC-VIS EN MODO TRANSPARENTE
+================================================================================
+
+$ SW-ACC-VIS# show vtp status
+VTP Version                     : 1
+Configuration Revision          : 0
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 7
+VTP Operating Mode              : Transparent
+VTP Domain Name                 : Smart_7
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0xE9 0x79 0x84 0xAB 0x04 0xCB 0xFC 0x9C
+Configuration last modified by 0.0.0.0 at 0-0-00 00:00:00
+
+$ SW-ACC-VIS# show vlan brief
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/2 ... Gig0/2  (apagados)
+56   VISITANTES                       active    Fa0/1
+96   NATIVA                           active
+1002 fddi-default                     active
+1003 token-ring-default               active
+1004 fddinet-default                  active
+1005 trnet-default                    active
+
+    --> Revision 0, solo 7 VLANs locales (1, 56, 96 y las 4 de fabrica) y un MD5
+        digest DISTINTO: este switch NO sincroniza su base de datos con la del
+        dominio. Es la evidencia del aislamiento de la administracion de VLANs
+        exigido para el segmento de visitantes.
+    --> Precision: "transparente" significa que no sincroniza su base de datos y
+        no origina actualizaciones propias, NO que sea incapaz de reenviar
+        anuncios. Ver seccion 8.1 del manual.
+
+================================================================================
+NOTA SOBRE EL NUMERO DE REVISION Y COMO SE REINICIA
+================================================================================
+
+La revision del dominio es 35 porque durante la captura de tramas del alcance
+opcional (evidencia 07) se creo y luego se borro una VLAN temporal en el servidor
+para forzar el envio de un anuncio. Cada cambio en la base de datos incrementa el
+Configuration Revision Number.
+
+Al borrar esa VLAN, los switches de acceso quedaron temporalmente en revision 34
+con 13 VLANs mientras los de distribucion ya estaban en 35 con 12. Se resincronizo
+aplicando en cada switch rezagado el procedimiento estandar de reinicio de
+revision:
+
+    SW-ACC-IDD-1(config)# vtp mode transparent
+    SW-ACC-IDD-1(config)# vtp mode client
+
+Ese paso lleva la revision local a 0 y obliga al switch a tomar la base de datos
+del dominio. Es exactamente la precaucion que Cisco recomienda aplicar ANTES de
+conectar cualquier switch nuevo a un dominio VTP, y la razon por la que aparece
+documentada en la seccion 8.3 del manual: un switch con revision mas alta puede
+sobrescribir las VLANs de todo el dominio, este en modo servidor o en modo
+cliente.
