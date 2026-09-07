@@ -1,0 +1,175 @@
+! =============================================================================
+! SWITCHES DE ACCESO Catalyst 2960-24TT  -  Centro de I+D y Edificio Corporativo
+! Los cuatro son VTP CLIENT y corren PVST con prioridad por omision (32768):
+! ninguno debe ganar la eleccion de Root Bridge.
+! Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+!
+! Transcrito de "show running-config" de los equipos en ejecucion. En cada uno
+! se omiten las 20-21 interfaces sin usar, todas con
+! "description NO USADO - deshabilitado por politica" + "shutdown".
+! =============================================================================
+
+
+! -----------------------------------------------------------------------------
+! SW-ACC-IDD-1   (Centro de I+D, 4 estaciones)   -   SVI 192.168.99.12
+! -----------------------------------------------------------------------------
+version 12.2
+!
+hostname SW-ACC-IDD-1
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ description Estaciones I+D
+ switchport access vlan 26
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/2
+ description Estaciones I+D
+ switchport access vlan 26
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/3
+ description Estaciones I+D
+ switchport access vlan 26
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/4
+ description Estaciones I+D
+ switchport access vlan 26
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet0/1
+ description TRUNK a SW-DIST-IDD
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/2
+ description TRUNK anillo I+D
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 26,96,99
+ switchport mode trunk
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.12 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+end
+
+!   --> Gi0/2 cierra el anillo de I+D contra el Gi0/2 de SW-ACC-IDD-2 y es el
+!       puerto que STP deja en estado Altn BLK en operacion normal.
+
+
+! -----------------------------------------------------------------------------
+! SW-ACC-IDD-2   (Centro de I+D, 4 estaciones)   -   SVI 192.168.99.13
+! -----------------------------------------------------------------------------
+! Configuracion identica a SW-ACC-IDD-1, con dos diferencias:
+!     hostname SW-ACC-IDD-2
+!     interface Vlan99 -> ip address 192.168.99.13 255.255.255.0
+! Sus Fa0/1-Fa0/4 alojan PC-IDD-05 a PC-IDD-08.
+! Su Gi0/2 es el otro extremo del anillo y queda en estado Desg FWD.
+
+
+! -----------------------------------------------------------------------------
+! SW-ACC-CORP-A   (Edificio Corporativo, Ala A)   -   SVI 192.168.99.22
+! -----------------------------------------------------------------------------
+version 12.2
+!
+hostname SW-ACC-CORP-A
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ description Gerencia Ala A
+ switchport access vlan 16
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/2
+ description Gerencia Ala A
+ switchport access vlan 16
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/3
+ description Gerencia Ala A
+ switchport access vlan 16
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/24
+ description TRUNK a SW-DIST-CORP
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/1
+ description TRUNK inter-alas (respaldo)
+ switchport trunk native vlan 96
+ switchport trunk allowed vlan 16,96,99
+ switchport mode trunk
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description Gestion en banda
+ ip address 192.168.99.22 255.255.255.0
+!
+banner motd ^CAcceso Restringido - TechPark_202300476^C
+!
+end
+
+
+! -----------------------------------------------------------------------------
+! SW-ACC-CORP-B   (Edificio Corporativo, Ala B)   -   SVI 192.168.99.23
+! -----------------------------------------------------------------------------
+! Configuracion identica a SW-ACC-CORP-A, con dos diferencias:
+!     hostname SW-ACC-CORP-B
+!     interface Vlan99 -> ip address 192.168.99.23 255.255.255.0
+!     descripciones "Gerencia Ala B" en Fa0/1-Fa0/3
+! Su Gi0/1 se conecta al Gi0/1 de SW-ACC-CORP-A y es el puerto que STP deja en
+! estado Altn BLK durante la operacion normal. Es el enlace que entra en
+! forwarding cuando se apaga Fa0/24 (ver docs/evidencias/04-spanning-tree.txt).
+
+
+! -----------------------------------------------------------------------------
+! NOTAS COMUNES A LOS CUATRO
+! -----------------------------------------------------------------------------
+! VTP:  vtp domain Smart_7
+!       vtp password proyecto12S2026
+!       vtp mode client
+! (no aparecen en el running-config de Packet Tracer para Server/Client; se
+!  verifican con "show vtp status").
+!
+! Todos los puertos de acceso llevan portfast + bpduguard. Todos los troncales
+! llevan VLAN nativa 96 y una lista de VLANs permitidas podada, sin la VLAN 1.
+!
+! Los puertos no utilizados quedaron con "description NO USADO - deshabilitado
+! por politica" + "shutdown".
+!
+! Estos cuatro switches se configuraron interfaz por interfaz: en el IOS
+! simulado de Packet Tracer 9.0.1 los subcomandos posteriores a
+! "interface range" devuelven "invalid input". En un IOS real el comando
+! "interface range" funciona con normalidad y el resultado seria identico.
