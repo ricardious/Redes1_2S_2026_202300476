@@ -1,0 +1,135 @@
+================================================================================
+EVIDENCIA 2 - ETHERCHANNEL LACP (carnet par 202300476 -> LACP)
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Capturado desde Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+$ SW-CORE-DC# show etherchannel summary
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+Number of channel-groups in use: 3
+Number of aggregators:           3
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Gig1/1/1(P) Gig1/1/2(P) Gig1/1/3(P) Gig1/1/4(P)
+2      Po2(SU)           LACP   Gig1/0/1(P) Gig1/0/2(P)
+3      Po3(SU)           LACP   Gig1/0/7(P) Gig1/0/8(P)
+
+    --> (SU) = canal de Capa 2 en uso ; (P) = miembro efectivamente agregado.
+    --> Los 8 miembros estan agregados: ninguno (I) stand-alone ni (s) suspendido.
+    --> Po1 = 4 enlaces hacia el Centro de I+D: el troncal de mayor ancho de banda
+        del campus, como exige el enunciado.
+    --> Po2 = 2 enlaces hacia la granja de servidores: los servidores NO dependen
+        de una unica conexion fisica.
+    --> Po3 = 2 enlaces hacia el Edificio Corporativo, el otro edificio que el
+        enunciado senala como concentrador de trafico.
+
+================================================================================
+EL OTRO EXTREMO DE CADA CANAL
+================================================================================
+
+$ SW-DIST-IDD# show etherchannel summary
+Number of channel-groups in use: 1
+Number of aggregators:           1
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Gig1/1/1(P) Gig1/1/2(P) Gig1/1/3(P) Gig1/1/4(P)
+
+--------------------------------------------------------------------------------
+
+$ SW-ACC-SRV# show etherchannel summary
+Number of channel-groups in use: 1
+Number of aggregators:           1
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+2      Po2(SU)           LACP   Gig1/0/1(P) Gig1/0/2(P)
+
+--------------------------------------------------------------------------------
+
+$ SW-DIST-CORP# show etherchannel summary
+Number of channel-groups in use: 1
+Number of aggregators:           1
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+3      Po3(SU)           LACP   Gig1/0/6(P) Gig1/0/7(P)
+
+================================================================================
+EL CANAL AGREGA ANCHO DE BANDA: LO CONFIRMA EL COSTO DE STP
+================================================================================
+
+$ SW-DIST-IDD# show spanning-tree vlan 26     (extracto)
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Gi1/0/1          Desg FWD 4         128.1    P2p
+Gi1/0/2          Desg FWD 4         128.2    P2p
+Po1              Root FWD 3         128.29   P2p
+
+    --> Un enlace Gigabit individual tiene costo 4; el EtherChannel Po1 tiene
+        costo 3. STP trata al canal como un enlace de mayor capacidad, que es
+        exactamente el efecto que se buscaba con la agregacion.
+
+$ SW-DIST-CORP# show spanning-tree vlan 16     (extracto)
+  Root ID    Priority    24592
+             Address     0001.C94C.BC23
+             Cost        3
+             Port        30(Port-channel3)
+
+================================================================================
+PRUEBA DE PERDIDA DE UN MIEMBRO DEL CANAL
+================================================================================
+
+Objetivo: demostrar el requisito del enunciado de que la granja de servidores no
+dependa de una unica conexion fisica.
+
+Con un ping de gestion en curso desde SW-ACC-SRV hacia el nucleo, se apago uno de
+los dos miembros de Po2:
+
+$ SW-CORE-DC(config)# interface GigabitEthernet1/0/2
+$ SW-CORE-DC(config-if)# shutdown
+
+$ SW-CORE-DC# show etherchannel summary
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Gig1/1/1(P) Gig1/1/2(P) Gig1/1/3(P) Gig1/1/4(P)
+2      Po2(SU)           LACP   Gig1/0/1(P) Gig1/0/2(D)
+3      Po3(SU)           LACP   Gig1/0/7(P) Gig1/0/8(P)
+
+    --> Po2 sigue (SU) = EN USO con un solo miembro. El miembro caido pasa a (D).
+
+$ SW-ACC-SRV> ping 192.168.99.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+
+%LINK-3-UPDOWN: Interface GigabitEthernet1/0/2, changed state to down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet1/0/2, changed state to down
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 5/59/89 ms
+
+    --> El mensaje de caida del enlace aparece EN MEDIO del ping: la falla ocurrio
+        durante la prueba.
+    --> 4 de 5 respuestas. El unico paquete perdido es el primero, que es el que
+        resuelve ARP (el mismo comportamiento se observa en pings sin ninguna
+        falla, ver evidencia 06).
+    --> NO hubo reconvergencia de spanning tree: para STP el canal es una sola
+        interfaz logica que no dejo de existir. Esa es la diferencia con la
+        redundancia por STP, donde el cambio de camino cuesta dos veces el
+        forward delay (evidencia 04).
+
+$ SW-CORE-DC(config-if)# no shutdown      (enlace restaurado)
