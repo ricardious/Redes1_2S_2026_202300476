@@ -1,0 +1,135 @@
+================================================================================
+EVIDENCIA 3 - ENLACES TRONCALES 802.1Q, VLAN NATIVA 96 Y PODA DE VLANs
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Capturado desde Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+$ SW-CORE-DC# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Po1         on           802.1q         trunking      96
+Po2         on           802.1q         trunking      96
+Po3         on           802.1q         trunking      96
+Gig1/0/5    on           802.1q         trunking      96
+
+Port        Vlans allowed on trunk
+Po1         26,96,99
+Po2         46,96,99
+Po3         16,96,99
+Gig1/0/5    36,96,99
+
+Port        Vlans allowed and active in management domain
+Po1         26,96,99
+Po2         46,96,99
+Po3         16,96,99
+Gig1/0/5    36,96,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Po1         26,96,99
+Po2         46,96,99
+Po3         16,96,99
+Gig1/0/5    36,96,99
+
+    --> Los 4 troncales del backbone usan VLAN nativa 96, no la 1 por omision.
+    --> Cada edificio recibe UNICAMENTE su propia VLAN de datos + la 96 (nativa)
+        + la 99 (gestion). El dominio de broadcast de cada VLAN queda confinado
+        a su edificio.
+    --> La VLAN 1 NO aparece en ninguna lista: fue podada de los 17 troncales.
+    --> La VLAN 56 (VISITANTES) NO aparece en ningun troncal del backbone.
+    --> Los tres EtherChannel aparecen como una sola interfaz logica (Po1, Po2,
+        Po3), no como sus miembros fisicos.
+
+================================================================================
+
+$ SW-DIST-CORP# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Po3         on           802.1q         trunking      96
+Gig1/0/3    on           802.1q         trunking      96
+Gig1/0/4    on           802.1q         trunking      96
+Gig1/0/5    on           802.1q         trunking      96
+
+Port        Vlans allowed on trunk
+Po3         16,96,99      (hacia el nucleo - EtherChannel)
+Gig1/0/3    16,96,99      (hacia el ala A)
+Gig1/0/4    16,96,99      (hacia el ala B)
+Gig1/0/5    56,96         (hacia SW-ACC-VIS - troncal aislado)
+
+    --> Gig1/0/5 es el UNICO troncal de toda la topologia que transporta la
+        VLAN 56, y termina en SW-ACC-VIS. El trafico de invitados no tiene por
+        donde salir del edificio: Po3 solo permite 16, 96 y 99.
+    --> Notese tambien que Gig1/0/5 NO transporta la VLAN 99: el plano de
+        gestion del campus tampoco llega al segmento de visitantes.
+
+================================================================================
+
+$ SW-ACC-VIS# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Fa0/24      on           802.1q         trunking      96
+
+Port        Vlans allowed on trunk
+Fa0/24      56,96
+
+    --> Extremo remoto del troncal aislado. Este switch es una hoja de la
+        topologia: no hay nada mas detras de el.
+
+================================================================================
+PUERTOS BLOQUEADOS POR STP, VISTOS DESDE LOS TRONCALES
+================================================================================
+
+$ SW-ACC-CORP-B# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Fa0/24      on           802.1q         trunking      96
+Gig0/1      on           802.1q         trunking      96
+
+Port        Vlans allowed on trunk
+Fa0/24      16,96,99
+Gig0/1      16,96,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Fa0/24      16,96,99
+Gig0/1      none
+
+    --> Gig0/1 (enlace inter-alas) esta permitido pero NO reenvia: STP lo tiene
+        bloqueado mientras Fa0/24 este activo. Es el camino de respaldo que se
+        activa en la prueba de la evidencia 04.
+
+--------------------------------------------------------------------------------
+
+$ SW-ACC-IDD-1# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Gig0/1      on           802.1q         trunking      96
+Gig0/2      on           802.1q         trunking      96
+
+Port        Vlans allowed on trunk
+Gig0/1      26,96,99
+Gig0/2      26,96,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gig0/1      26,96,99
+Gig0/2      none
+
+    --> Gig0/2 cierra el anillo de I+D y es el puerto que STP bloquea en esa
+        area. Si cayera SW-DIST-IDD o el enlace Gig0/1, este puerto entraria en
+        reenvio y el switch seguiria alcanzando al resto del anillo.
+
+================================================================================
+RESUMEN DE LOS 17 TRONCALES
+================================================================================
+
+    Troncal                                        VLANs permitidas
+    ---------------------------------------------  ----------------
+    Po1   SW-CORE-DC   <-> SW-DIST-IDD  (4 cables)  26,96,99
+    Po2   SW-CORE-DC   <-> SW-ACC-SRV   (2 cables)  46,96,99
+    Po3   SW-CORE-DC   <-> SW-DIST-CORP (2 cables)  16,96,99
+    Gi1/0/5 SW-CORE-DC <-> SW-DIST-PROD (1 cable)   36,96,99
+    SW-DIST-IDD  <-> SW-ACC-IDD-1                   26,96,99
+    SW-DIST-IDD  <-> SW-ACC-IDD-2                   26,96,99
+    SW-ACC-IDD-1 <-> SW-ACC-IDD-2  (anillo)         26,96,99
+    SW-DIST-CORP <-> SW-ACC-CORP-A                  16,96,99
+    SW-DIST-CORP <-> SW-ACC-CORP-B                  16,96,99
+    SW-ACC-CORP-A <-> SW-ACC-CORP-B (inter-alas)    16,96,99
+    SW-DIST-CORP <-> SW-ACC-VIS                     56,96
+    SW-DIST-PROD <-> SW-ACC-PROD                    36,96,99
+
+    17 enlaces fisicos entre switches, todos troncales 802.1Q con VLAN nativa 96.
+    Se presentan como 12 troncales logicos: 3 Port-channel (que agrupan 8 de esos
+    cables) mas 9 enlaces fisicos individuales.
