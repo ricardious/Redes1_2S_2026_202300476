@@ -1,0 +1,141 @@
+================================================================================
+EVIDENCIA 5 - SEGMENTO LEGACY: DOMINIO DE COLISION COMPARTIDO Y CONTENCION
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Capturado desde Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+TOPOLOGIA DEL SEGMENTO
+----------------------
+    PC-LEG-01 --+
+    PC-LEG-02 --+-- HUB-LEGACY (Hub-PT, repetidor de Capa 1)
+    PC-LEG-03 --+          |
+                           +-- SW-ACC-PROD Fa0/10  (puerto de acceso, VLAN 36)
+
+Cuatro cables (Fa0 del hub hacia el switch, y Fa1/Fa2/Fa3 hacia las maquinas)
+comparten UN SOLO dominio de colision, porque un hub repite cada bit por todos
+sus puertos en lugar de conmutar tramas.
+
+================================================================================
+
+$ SW-ACC-PROD# show interfaces FastEthernet0/10 switchport
+Name: Fa0/10
+Switchport: Enabled
+Administrative Mode: static access
+Operational Mode: static access
+Access Mode VLAN: 36 (PRODUCCION)
+Negotiation of Trunking: Off
+
+================================================================================
+
+$ SW-ACC-PROD# show port-security interface FastEthernet0/10
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 4
+Total MAC Addresses        : 3
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 0
+Last Source Address:Vlan   : 0003.E48D.DB25:36
+Security Violation Count   : 0
+
+    --> 3 direcciones aprendidas (las tres maquinas Legacy) sobre un maximo de 4.
+    --> "Configured MAC Addresses: 0" y "Sticky MAC Addresses: 0": NO hay
+        direcciones fijadas. Es decir, port-security aqui limita CUANTAS MAC
+        acepta el puerto, pero NO define CUALES. Un cuarto equipo cualquiera
+        seria aceptado. Para autorizar equipos concretos habria que fijar las
+        MAC con "switchport port-security mac-address" o con "sticky"; para
+        autenticar de verdad haria falta 802.1X.
+
+================================================================================
+
+$ SW-ACC-PROD# show mac address-table interface FastEthernet0/10
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+
+  36    0003.e48d.db25    STATIC      Fa0/10
+  36    0060.3edb.90e4    STATIC      Fa0/10
+  36    0060.707c.8e07    STATIC      Fa0/10
+
+    --> Tres direcciones MAC aprendidas en UN SOLO puerto fisico. Aparecen como
+        STATIC porque port-security convierte las direcciones aprendidas en
+        entradas seguras.
+
+    --> PRECISION IMPORTANTE: varias MAC en un puerto NO demuestran por si solas
+        que haya un hub. Un switch no administrado, un servidor con maquinas
+        virtuales o un telefono IP con PC en cascada producirian exactamente la
+        misma tabla. Es un indicio COMPATIBLE con un dominio compartido, no una
+        prueba de el.
+        Lo que si demuestra que este segmento es un dominio de colision
+        compartido es la topologia: un repetidor de Capa 1 con cuatro puertos
+        activos, verificable en el archivo .pkt y en el diagrama del manual.
+
+================================================================================
+MEDIDAS DE CONTENCION APLICADAS (configuracion del puerto)
+================================================================================
+
+interface FastEthernet0/10
+ description SEGMENTO LEGACY - HUB (dominio de colision compartido)
+ switchport mode access
+ switchport access vlan 36
+ switchport port-security
+ switchport port-security maximum 4
+ switchport port-security violation restrict
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ storm-control broadcast level 20
+
+QUE HACE CADA UNA, Y QUE NO HACE
+--------------------------------
+
+  switchport mode access + vlan 36
+      SI: acota el dominio de colision a este puerto. El switch conmuta tramas
+          en lugar de repetir bits, asi que las colisiones del hub no cruzan al
+          resto de la red. Ademas confina el broadcast del segmento a la VLAN 36.
+
+  storm-control broadcast level 20
+      SI: vigila el trafico broadcast que entra por el puerto hacia el bus de
+          conmutacion y bloquea el puerto mientras supere el 20% del ancho de
+          banda, hasta que el trafico caiga por debajo del umbral.
+      NO: no reduce ni una sola colision dentro del hub. Actua sobre tramas que
+          YA llegaron al switch. Tampoco limita unicast ni multicast salvo que
+          se configuren esos tipos por separado.
+
+  switchport port-security maximum 4 / violation restrict
+      SI: limita a 4 el numero de MAC de origen aceptadas y descarta el trafico
+          excedente contando la violacion, sin apagar el puerto.
+      NO: no identifica ni autoriza equipos (ver nota arriba).
+
+  spanning-tree portfast
+      SI: el puerto entra en forwarding de inmediato en lugar de esperar los 30 s
+          de STP. Las maquinas Legacy no toleran bien ese retardo.
+      NO: no protege contra bucles por si solo.
+
+  spanning-tree bpduguard enable
+      SI: si llega un BPDU por este puerto -senal de que alguien conecto un
+          switch al hub- el puerto pasa a err-disabled antes de que altere el
+          arbol del campus.
+      Es el complemento RECOMENDADO de PortFast, no un requisito del protocolo.
+
+NOTA: "storm-control multicast level" fue RECHAZADO por el IOS del 2960 en
+Packet Tracer 9.0.1 (Invalid input). En esa plataforma simulada solo esta
+implementado el control de tormentas de broadcast.
+
+================================================================================
+LO QUE ESTAS MEDIDAS NO ARREGLAN
+================================================================================
+
+Dentro del segmento sigue habiendo colisiones, half-duplex y ancho de banda
+compartido entre las tres maquinas. Eso solo se resuelve reemplazando el hub por
+un switch, que es precisamente lo que el enunciado indica que todavia no es
+posible. Las medidas de arriba impiden que el problema se propague, no lo
+eliminan.
+
+Efecto medible del dominio compartido: el ping entre dos maquinas del propio
+segmento (PC-LEG-01 -> PC-LEG-03) pierde el primer paquete resolviendo ARP y
+completa 3 de 4 en la primera ejecucion (ver evidencia 06).
