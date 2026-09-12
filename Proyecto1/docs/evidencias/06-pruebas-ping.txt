@@ -1,0 +1,284 @@
+================================================================================
+EVIDENCIA 6 - PRUEBAS DE CONECTIVIDAD (PINGS EXITOSOS Y FALLIDOS)
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Capturado desde Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+--------------------------------------------------------------------------------
+A) PINGS EXITOSOS - CONECTIVIDAD INTRA-VLAN
+--------------------------------------------------------------------------------
+
+1) VLAN 26 INVESTIGACION, atravesando el anillo de I+D
+   (PC-IDD-01 en SW-ACC-IDD-1  ->  PC-IDD-08 en SW-ACC-IDD-2)
+
+C:\>ping 192.168.26.24
+Pinging 192.168.26.24 with 32 bytes of data:
+Reply from 192.168.26.24: bytes=32 time=30ms TTL=128
+Reply from 192.168.26.24: bytes=32 time=10ms TTL=128
+Reply from 192.168.26.24: bytes=32 time<1ms TTL=128
+Reply from 192.168.26.24: bytes=32 time=10ms TTL=128
+
+Ping statistics for 192.168.26.24:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 30ms, Average = 12ms
+
+--------------------------------------------------------------------------------
+
+2) VLAN 16 GERENCIA, de un ala a la otra del Edificio Corporativo
+   (PC-GER-01 en el ala A  ->  PC-GER-04 en el ala B)
+
+C:\>ping 192.168.16.21
+Pinging 192.168.16.21 with 32 bytes of data:
+Reply from 192.168.16.21: bytes=32 time=173ms TTL=128
+Reply from 192.168.16.21: bytes=32 time=51ms TTL=128
+Reply from 192.168.16.21: bytes=32 time=29ms TTL=128
+Reply from 192.168.16.21: bytes=32 time=28ms TTL=128
+
+Ping statistics for 192.168.16.21:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 28ms, Maximum = 173ms, Average = 70ms
+
+--------------------------------------------------------------------------------
+
+3) VLAN 46 SERVIDORES, dentro de la granja  (SRV-WEB -> SRV-ARCHIVOS)
+
+C:\>ping 192.168.46.14
+Pinging 192.168.46.14 with 32 bytes of data:
+Reply from 192.168.46.14: bytes=32 time=132ms TTL=128
+Reply from 192.168.46.14: bytes=32 time=59ms TTL=128
+Reply from 192.168.46.14: bytes=32 time<1ms TTL=128
+Reply from 192.168.46.14: bytes=32 time<1ms TTL=128
+
+Ping statistics for 192.168.46.14:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 132ms, Average = 47ms
+
+--------------------------------------------------------------------------------
+
+4) VLAN 36 PRODUCCION, de una estacion moderna a una maquina Legacy tras el hub
+   (PC-PROD-01 -> PC-LEG-01)
+
+C:\>ping 192.168.36.101
+Pinging 192.168.36.101 with 32 bytes of data:
+Reply from 192.168.36.101: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.101: bytes=32 time=112ms TTL=128
+Reply from 192.168.36.101: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.101: bytes=32 time=231ms TTL=128
+
+Ping statistics for 192.168.36.101:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 231ms, Average = 85ms
+
+--------------------------------------------------------------------------------
+
+5) VLAN 36, DENTRO del dominio de colision compartido del hub
+   (PC-LEG-01 -> PC-LEG-03)
+
+C:\>ping 192.168.36.103
+Pinging 192.168.36.103 with 32 bytes of data:
+Request timed out.
+Reply from 192.168.36.103: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.103: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.103: bytes=32 time=35ms TTL=128
+
+Ping statistics for 192.168.36.103:
+    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 35ms, Average = 11ms
+
+    --> El paquete perdido es el PRIMERO: es el que se pierde mientras se
+        resuelve ARP. No es una falla del segmento.
+
+--------------------------------------------------------------------------------
+
+6) La misma prueba con el ARP ya resuelto  (PC-LEG-02 -> PC-LEG-01)
+
+C:\>ping 192.168.36.101
+Pinging 192.168.36.101 with 32 bytes of data:
+Reply from 192.168.36.101: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.101: bytes=32 time<1ms TTL=128
+Reply from 192.168.36.101: bytes=32 time=1ms TTL=128
+Reply from 192.168.36.101: bytes=32 time=39ms TTL=128
+
+Ping statistics for 192.168.36.101:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 39ms, Average = 10ms
+
+--------------------------------------------------------------------------------
+
+7) VLAN 56 VISITANTES, entre laptops asociadas al Access Point (Wi-Fi)
+   (LAP-VIS-01 -> LAP-VIS-03)
+
+C:\>ping 192.168.56.13
+Pinging 192.168.56.13 with 32 bytes of data:
+Reply from 192.168.56.13: bytes=32 time=26ms TTL=128
+Reply from 192.168.56.13: bytes=32 time=30ms TTL=128
+Reply from 192.168.56.13: bytes=32 time=36ms TTL=128
+Reply from 192.168.56.13: bytes=32 time=13ms TTL=128
+
+Ping statistics for 192.168.56.13:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 13ms, Maximum = 36ms, Average = 26ms
+
+    --> Los tiempos son mayores y mas variables que en cobre: es el medio
+        inalambrico compartido con CSMA/CA.
+
+--------------------------------------------------------------------------------
+B) PINGS EXITOSOS - VLAN 99 DE GESTION, ATRAVESANDO EL BACKBONE
+--------------------------------------------------------------------------------
+
+8) SW-ACC-IDD-1 -> SW-CORE-DC   (cruza el EtherChannel Po1, 4 enlaces)
+
+SW-ACC-IDD-1>ping 192.168.99.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 43/62/88 ms
+
+9) SW-ACC-PROD -> SW-CORE-DC   (cruza el troncal simple de la Planta)
+
+SW-ACC-PROD>ping 192.168.99.1
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 38/67/83 ms
+
+10) SW-ACC-CORP-A -> SW-CORE-DC   (cruza el EtherChannel Po3)
+
+SW-ACC-CORP-A>ping 192.168.99.1
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 7/79/136 ms
+
+11) SW-ACC-CORP-B -> SW-CORE-DC   (cruza Po3 por el ala B)
+
+SW-ACC-CORP-B>ping 192.168.99.1
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 33/135/218 ms
+
+    --> El paquete que falta en los resultados de 4/5 es SIEMPRE el primero: el
+        que resuelve ARP. La prueba 10, con la entrada ARP ya en cache, da 5/5.
+
+--------------------------------------------------------------------------------
+C) PRUEBAS DE TOLERANCIA A FALLOS
+--------------------------------------------------------------------------------
+
+12) FALLA DE UN MIEMBRO DE ETHERCHANNEL (detalle en evidencia 02)
+    Se apago Gi1/0/2 del nucleo, miembro de Po2, con un ping en curso.
+
+SW-ACC-SRV>ping 192.168.99.1
+Sending 5, 100-byte ICMP Echos to 192.168.99.1, timeout is 2 seconds:
+
+%LINK-3-UPDOWN: Interface GigabitEthernet1/0/2, changed state to down
+%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet1/0/2, changed state to down
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 5/59/89 ms
+
+    --> Sin corte de servicio: el canal siguio en uso con un solo miembro.
+
+13) FALLA DEL UPLINK DE UN ALA (detalle en evidencia 04)
+    Se apago Fa0/24 de SW-ACC-CORP-B.
+
+    Durante la transicion de STP (Gi0/1 en Root LIS / Root LRN):
+C:\>ping 192.168.16.11
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)
+
+    Ya convergido (Gi0/1 en Root FWD):
+C:\>ping 192.168.16.11
+Reply from 192.168.16.11: bytes=32 time=10ms TTL=128
+Reply from 192.168.16.11: bytes=32 time<1ms TTL=128
+Reply from 192.168.16.11: bytes=32 time<1ms TTL=128
+Reply from 192.168.16.11: bytes=32 time<1ms TTL=128
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+    Minimum = 0ms, Maximum = 10ms, Average = 2ms
+
+    --> La conectividad entre alas se mantiene, pero con un corte durante la
+        convergencia: PVST tarda dos veces el forward delay (15 s + 15 s).
+        Contrastar con la prueba 12, donde no hubo corte alguno.
+
+--------------------------------------------------------------------------------
+D) PINGS FALLIDOS - AISLAMIENTO INTER-VLAN (resultado esperado y deseado)
+--------------------------------------------------------------------------------
+
+14) VLAN 26 -> VLAN 16   (PC-IDD-01 -> PC-GER-01)
+
+C:\>ping 192.168.16.11
+Pinging 192.168.16.11 with 32 bytes of data:
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+
+Ping statistics for 192.168.16.11:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+--------------------------------------------------------------------------------
+
+15) VLAN 56 VISITANTES -> VLAN 46 SERVIDORES   (LAP-VIS-01 -> SRV-WEB)
+
+C:\>ping 192.168.46.11
+Pinging 192.168.46.11 with 32 bytes of data:
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+
+Ping statistics for 192.168.46.11:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+    --> Prueba clave del aislamiento del segmento de invitados.
+
+--------------------------------------------------------------------------------
+
+16) VLAN 36 Legacy -> VLAN 46 SERVIDORES   (PC-LEG-03 -> SRV-BD)
+
+C:\>ping 192.168.46.12
+Pinging 192.168.46.12 with 32 bytes of data:
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+
+Ping statistics for 192.168.46.12:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+================================================================================
+POR QUE UN PING FALLIDO NO BASTA COMO PRUEBA DE SEGMENTACION
+================================================================================
+
+Que un ping falle NO demuestra por si solo que la red este bien segmentada. Un
+cable desconectado, una IP mal escrita, un host apagado o un firewall producen
+exactamente el mismo resultado. El 100% de perdida es CONSISTENTE con la
+segmentacion, no una prueba de ella.
+
+La prueba es la COMBINACION de estos hechos, verificables por separado:
+
+  1. Los hosts estan en VLANs distintas.
+     -> "show vlan brief" en cada switch de acceso muestra el puerto de cada host
+        asignado a su VLAN (16, 26, 36, 46 o 56).
+
+  2. Los troncales NO transportan la VLAN del otro extremo.
+     -> "show interfaces trunk" (evidencia 03): Po1 lleva 26,96,99; Po3 lleva
+        16,96,99; Gi1/0/5 del nucleo lleva 36,96,99; Po2 lleva 46,96,99. El
+        trafico de la VLAN 26 no tiene por donde llegar al Corporativo.
+
+  3. NO existe enrutamiento inter-VLAN.
+     -> No hay router, ni router-on-a-stick, ni "ip routing" habilitado, ni SVI
+        enrutadas. Las unicas SVI son las de gestion en la VLAN 99 y la Vlan1,
+        que esta sin direccion y apagada en los 11 switches. Sin un salto de
+        Capa 3, dos VLANs no pueden comunicarse por construccion.
+
+  4. Los hosts no tienen gateway configurado.
+     -> Ni siquiera intentan enrutar: descartan el destino por estar fuera de su
+        subred /24.
+
+  5. El control positivo funciona.
+     -> Las pruebas 1 a 11 demuestran que la red SI transporta trafico cuando
+        debe. Sin esa contraparte, un 100% de perdida podria significar
+        simplemente que la red esta rota.
