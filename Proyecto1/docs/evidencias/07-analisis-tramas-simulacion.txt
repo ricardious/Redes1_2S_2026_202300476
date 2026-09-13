@@ -1,0 +1,261 @@
+================================================================================
+EVIDENCIA 7 - ALCANCE OPCIONAL: ANALISIS DE TRAMAS STP Y VTP EN MODO SIMULACION
+Proyecto 1 "SmartCity Tech Park" - Alex Ricardo Castaneda Rodriguez - 202300476
+Cisco Packet Tracer 9.0.1.0858
+================================================================================
+
+METODO
+------
+1. Modo Simulacion activado.
+2. Filtro del Event List reducido a UNICAMENTE los protocolos STP y VTP.
+3. Avance paso a paso (Capture/Forward) y lectura de los campos de cada
+   encabezado desde la ventana PDU Details.
+
+Los valores de este archivo son los campos reales de las tramas capturadas.
+Donde Packet Tracer devuelve un byte con signo (por ejemplo el DSAP), se indica
+tanto el valor crudo como su interpretacion en hexadecimal de un byte.
+
+Primera corrida (solo STP):  126 tramas, 112 de ellas BPDU.
+Segunda corrida (STP + VTP): 829 tramas -> 250 VTP Summary Advertisement,
+                             78 VTP Subset Advertisement y 147 BPDU.
+
+
+================================================================================
+PARTE A - BPDU DE STP: DONDE ESTAN EL ROOT ID, EL BRIDGE ID Y EL COSTO
+================================================================================
+
+Se capturaron tres BPDU de la MISMA instancia (VLAN 16) en tres puntos distintos
+del arbol. Comparadas entre si explican el mecanismo completo de STP.
+
+--------------------------------------------------------------------------------
+A.1  BPDU EMITIDA POR EL ROOT BRIDGE  (recibida en SW-DIST-CORP)
+--------------------------------------------------------------------------------
+Capa 2 (802.1Q)
+  dstMacAddress ....... 0100.0CCC.CCCD   (multicast SSTP de Cisco, PVST+)
+  srcMacAddress ....... 0002.1600.CB07   (puerto del nucleo)
+  tpid ................ 0x8100           (EtherType de 802.1Q)
+  vlanId .............. 16               <- la BPDU viaja etiquetada en su VLAN
+  userPriority / cfi .. 0 / 0
+  pduSize ............. 74 bytes
+
+LLC / SNAP
+  dsap / ssap ......... 0x42 / 0x42
+  controlField ........ 3                (LLC tipo UI)
+  orgCode ............. 0x0C             (OUI de Cisco, 00-00-0C)
+  protocolId .......... 0x010B           (PVSTP+)
+
+STP (StpFrame)
+  protocolId .......... 0
+  version ............. 0                (STP clasico, IEEE 802.1D)
+  messageType ......... 0                (Configuration BPDU)
+  ROOT ID ............. prioridad 24592  MAC 0001.C94C.BC23
+  BRIDGE ID ........... prioridad 24592  MAC 0001.C94C.BC23
+  ROOT PATH COST ...... 0                <- esta a distancia cero de si misma
+  portId .............. 0x8007
+  messageAge .......... 0
+  maxAge / helloTime / forwardDelay ... 20 / 2 / 15
+  TLV de PVST+ ........ type=0  length=2  value=16
+
+  --> ROOT ID y BRIDGE ID son IDENTICOS. Esa coincidencia es la firma
+      inconfundible del Root Bridge: el emisor ES la raiz.
+  --> 24592 = 24576 (prioridad fijada con "spanning-tree vlan 16 root primary")
+      + 16 (numero de VLAN, el campo system ID extension).
+  --> La MAC 0001.C94C.BC23 es la del bridge SW-CORE-DC.
+
+--------------------------------------------------------------------------------
+A.2  BPDU EMITIDA POR SW-DIST-CORP  (recibida en SW-CORE-DC)
+--------------------------------------------------------------------------------
+  dstMacAddress ....... 0100.0CCC.CCCD
+  srcMacAddress ....... 0010.1130.3B06
+  vlanId .............. 16
+  ROOT ID ............. prioridad 24592  MAC 0001.C94C.BC23   <- el mismo
+  BRIDGE ID ........... prioridad 28688  MAC 0006.2AD1.C090   <- DISTINTO
+  ROOT PATH COST ...... 3
+  portId .............. 0x8006
+  TLV de PVST+ ........ type=0  length=2  value=16
+
+  --> Mismo ROOT ID: los dos switches ya convergieron y reconocen a la misma
+      raiz.
+  --> BRIDGE ID distinto: 28688 = 28672 ("root secondary") + 16. Este switch
+      perdio la eleccion y solo esta retransmitiendo la informacion de la raiz.
+  --> COSTO 3: es el costo del EtherChannel Po3, el unico salto que separa a
+      SW-DIST-CORP del nucleo.
+
+--------------------------------------------------------------------------------
+A.3  BPDU EMITIDA POR SW-ACC-CORP-A  (recibida en SW-ACC-CORP-B)
+--------------------------------------------------------------------------------
+  dstMacAddress ....... 0100.0CCC.CCCD
+  srcMacAddress ....... 0001.C984.8719
+  vlanId .............. 16
+  ROOT ID ............. prioridad 24592  MAC 0001.C94C.BC23   <- el mismo
+  BRIDGE ID ........... prioridad 32784  MAC 0050.0F0A.7E56
+  ROOT PATH COST ...... 22
+  portId .............. 0x8019
+
+  --> BRIDGE ID 32784 = 32768 (prioridad por omision) + 16: un switch de acceso
+      que no participa de la eleccion.
+  --> COSTO 22 = 19 (su enlace Fa0/24 a 100 Mbps) + 3 (el Po3 del edificio).
+      Cada switch SUMA el costo de su puerto de entrada antes de reenviar.
+
+--------------------------------------------------------------------------------
+A.4  COMO SE LEE LA PROGRESION 0 -> 3 -> 22
+--------------------------------------------------------------------------------
+  SW-CORE-DC  (raiz) ....... anuncia costo  0
+  SW-DIST-CORP ............. anuncia costo  3   (+3 del Po3)
+  SW-ACC-CORP-A ............ anuncia costo 22   (+19 de su Fa0/24)
+
+Con ese numero cada switch elige como Root Port el de menor costo acumulado y
+bloquea los demas caminos. Es exactamente el mecanismo que deja Gi0/1 en
+"Altn BLK" en SW-ACC-CORP-B (evidencia 04): por Fa0/24 el costo es 22 y por
+Gi0/1 seria 26, asi que gana Fa0/24 y Gi0/1 queda bloqueado.
+
+--------------------------------------------------------------------------------
+A.5  EL CAMPO messageAge
+--------------------------------------------------------------------------------
+En las tres BPDU capturadas messageAge vale 0, incluso en las emitidas por
+switches que no son la raiz. En STP real este campo se incrementa a medida que
+la BPDU se aleja de la raiz y es lo que permite que una BPDU caduque al llegar a
+maxAge (20 s). Packet Tracer 9.0.1 transmite el campo pero no lo incrementa por
+salto en esta topologia: es una diferencia del simulador, y se deja anotada para
+no atribuirle al protocolo un comportamiento que no se observo.
+
+--------------------------------------------------------------------------------
+A.6  UNA INSTANCIA POR VLAN (PVST) Y LA BPDU 802.1D
+--------------------------------------------------------------------------------
+Como PVST corre una instancia por VLAN, se capturan BPDU distintas circulando en
+paralelo, cada una etiquetada con su VLAN y con un TLV que repite ese numero.
+En la captura aparecieron BPDU etiquetadas de las VLAN 1, 16, 26 y 99, mas las
+que viajan sin etiqueta sobre la VLAN nativa 96.
+
+El patron de prioridad "24576 + numero de VLAN" se confirmo para las ocho
+instancias con "show spanning-tree vlan <n>" en el Root Bridge de cada una:
+
+     VLAN   1  ->  24577        VLAN  46  ->  24622
+     VLAN  16  ->  24592        VLAN  56  ->  24632  (raiz: SW-ACC-VIS)
+     VLAN  26  ->  24602        VLAN  96  ->  24672
+     VLAN  36  ->  24612        VLAN  99  ->  24675
+
+Todas tienen como raiz a SW-CORE-DC salvo la VLAN 56, cuya raiz es SW-ACC-VIS.
+
+Ademas de las BPDU de PVST+ se capturo una BPDU DISTINTA:
+
+  dstMacAddress ....... 0180.C200.0000   (direccion estandar IEEE 802.1D)
+  encabezado L2 ....... IEEE802Dot3Header  (SIN etiqueta 802.1Q)
+  dsap / ssap ......... 0x42 / 0x42
+  (sin cabecera SNAP: no lleva orgCode ni protocolId)
+  ROOT ID = BRIDGE ID . prioridad 24577  MAC 0001.C94C.BC23
+  ROOT PATH COST ...... 0
+  TLV ................. type=0 length=2 value=1
+
+    --> Es la BPDU estandar que Cisco envia SIN etiquetar sobre la VLAN nativa
+        para interoperar con switches que no hablan PVST+. Notese que no lleva
+        cabecera SNAP y que su instancia corresponde a la VLAN 1 (24577).
+
+
+================================================================================
+PARTE B - PDU DE VTP: DOMAIN NAME Y CONFIGURATION REVISION NUMBER
+================================================================================
+
+VTP emite Summary Advertisements de forma periodica (cada 5 minutos por omision)
+y ademas cada vez que cambia la base de datos. Para no esperar el temporizador
+se forzo un cambio creando una VLAN temporal en el servidor:
+
+    SW-CORE-DC(config)# vlan 100
+    SW-CORE-DC(config-vlan)# name TEMP-CAPTURA-VTP
+
+--------------------------------------------------------------------------------
+B.1  SUMMARY ADVERTISEMENT   (recibido por SW-ACC-SRV en Port-channel2)
+--------------------------------------------------------------------------------
+Capa 2 (802.1Q)
+  dstMacAddress ....... 0100.0CCC.CCCC   (multicast de Cisco para CDP/VTP)
+  srcMacAddress ....... 0002.1600.CB01
+  tpid ................ 0x8100
+  vlanId .............. 1                <- VTP viaja etiquetado en la VLAN 1
+  pduSize ............. 80 bytes
+
+LLC / SNAP
+  dsap / ssap ......... 0xAA / 0xAA      (PT los devuelve con signo: 0xFFAA)
+  orgCode ............. 0x0C             (OUI de Cisco)
+  protocolId .......... 0x2003           (VTP)
+
+VTP (VtpSummaryFrame)
+  version ............. 1
+  code ................ 1                (Summary Advertisement)
+  VTP DOMAIN NAME ..... Smart_7          <<< campo pedido por el enunciado
+  CONFIGURATION REVISION  33             <<< campo pedido por el enunciado
+  followers ........... 1                (vienen Subset Advertisements detras)
+  updaterIp ........... 192.168.99.1     (SVI de gestion del servidor VTP)
+  updateTimeStamp ..... 3-1-93 00:03:38
+  md5 ................. 33B7BC56BEABD5DDD034A2AD438A6AB6
+
+--------------------------------------------------------------------------------
+B.2  SUBSET ADVERTISEMENT   (misma revision, con la base de datos completa)
+--------------------------------------------------------------------------------
+  dstMacAddress ....... 0100.0CCC.CCCC
+  vlanId .............. 1
+  pduSize ............. 348 bytes
+  code ................ 2                (Subset Advertisement)
+  domainName .......... Smart_7
+  configRevision ...... 33
+  sequence ............ 1
+
+  vlanInfos (13 entradas, la base de datos viaja DENTRO de la trama):
+       1  "default"                 96  "NATIVA"
+      16  "GERENCIA"                99  "ADMINISTRACION"
+      26  "INVESTIGACION"          100  "VLAN0100"   <- la VLAN recien creada
+      36  "PRODUCCION"            1002  "fddi-default"
+      46  "SERVIDORES"            1003  "token-ring-default"
+      56  "VISITANTES"            1004  "fddinet-default"
+                                  1005  "trnet-default"
+
+  Nota: la VLAN 100 viaja con el nombre por omision "VLAN0100" porque el Subset
+  se genero en el instante de crearla, antes de aplicarle el comando "name".
+
+--------------------------------------------------------------------------------
+B.3  EL REGISTRO DE DECISIONES DEL SWITCH RECEPTOR
+--------------------------------------------------------------------------------
+La pestana "OSI Model" de la misma PDU muestra el razonamiento de SW-ACC-SRV
+paso a paso. Transcripcion literal de los nodos relevantes:
+
+  [0] GigabitEthernet1/0/1 receives the frame.
+  [1] The frame is neither LACP or a PAgP type.
+  [2] Receiving on the port channel GigabitEthernet1/0/1.
+  [3] The frame source MAC address does not exist in the MAC table of Multilayer
+      Switch. Multilayer Switch adds a new MAC entry to its table.
+  [4] The frame's destination MAC address matches the receiving port's MAC
+      address, the broadcast address, or a multicast address.
+  [5] The device decapsulates the PDU from the Ethernet frame.
+  [6] The VTP process receives a VTP frame on Port-channel2.
+  [7] The VTP frame is a Summary Advertisement.
+  [8] The config revision in the Summary Advertisement is greater than the local
+      config revision.
+  [9] The Summary Advertisement indicates there are Subset Advertisements
+      following it. The VTP process waits for the Subset Advertisements.
+
+  --> El nodo [8] es el mecanismo completo de VTP en una linea: el cliente
+      compara el Configuration Revision recibido con el suyo y, por ser mayor,
+      acepta la actualizacion. Ese mismo criterio es el riesgo clasico de VTP
+      descrito en la seccion 8.3 del manual.
+
+--------------------------------------------------------------------------------
+B.4  HALLAZGO: VTP CRUZA UN TRONCAL DONDE LA VLAN 1 ESTA PODADA
+--------------------------------------------------------------------------------
+El Port-channel2 por el que llego esta trama tiene configurado:
+
+    switchport trunk allowed vlan 46,96,99
+
+La VLAN 1 NO esta en esa lista, y sin embargo la trama VTP llego etiquetada con
+vlanId = 1 y fue procesada. Es la comprobacion directa, sobre el cable, de que el
+trafico del plano de control de Cisco usa la VLAN 1 con independencia de la lista
+de VLANs permitidas del troncal, y por lo tanto de que NO hace falta dejar la
+VLAN 1 permitida "para que funcione VTP". Justifica la poda de la VLAN 1 descrita
+en la seccion 9.4 del manual.
+
+--------------------------------------------------------------------------------
+B.5  LIMPIEZA POSTERIOR
+--------------------------------------------------------------------------------
+Al terminar la captura se ejecuto "no vlan 100" en el servidor y se volvio a
+Modo Realtime. Crear y borrar la VLAN incremento el Configuration Revision del
+dominio en dos unidades; ese incremento es esperado y es precisamente el campo
+que esta evidencia muestra viajando dentro de la trama. La revision final del
+dominio queda registrada en la evidencia 01.
