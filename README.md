@@ -3,8 +3,8 @@
 Repositorio del curso **Redes de Computadoras 1** de la Escuela de Ciencias y Sistemas,
 Facultad de Ingeniería, Universidad de San Carlos de Guatemala.
 
-Aquí subo las prácticas del semestre. Cada una vive en su propia carpeta, con su documentación
-y sus archivos fuente.
+Aquí subo las prácticas y proyectos del semestre. Cada entrega vive en su propia carpeta,
+con su documentación y sus archivos fuente.
 
 | | |
 |---|---|
@@ -17,9 +17,10 @@ y sus archivos fuente.
 
 ## Contenido
 
-| Práctica | Tema | Estado |
-|---|---|---|
-| [**Práctica 1**](Practica1/) | QuetzalDev S.A. — Diseño físico de red (Capa 1) | Entregada |
+| Entrega | Tema | Ponderación | Estado |
+|---|---|---|---|
+| [**Práctica 1**](Practica1/) | QuetzalDev S.A. — Diseño físico de red (Capa 1) | — | Entregada |
+| [**Proyecto 1**](Proyecto1/) | SmartCity Tech Park — VLANs, VTP, STP y EtherChannel (Capas 1 y 2) | 22 pts | Entregado |
 
 ---
 
@@ -27,21 +28,26 @@ y sus archivos fuente.
 
 ```
 Redes1_2S_2026_202300476/
-├── README.md          este archivo
-└── Practica1/
-    ├── README.md      resumen de la práctica
-    ├── docs/          manual técnico, informe, enunciado y planos
-    └── packet-tracer/ diagrama y archivo editable
+├── README.md            este archivo
+├── Practica1/
+│   ├── README.md        resumen de la práctica
+│   ├── docs/            manual técnico, informe, enunciado y planos
+│   └── packet-tracer/   diagrama y archivo editable
+└── Proyecto1/
+    ├── README.md        manual técnico
+    ├── docs/            enunciado, diagramas, evidencias y configuraciones
+    └── packet-tracer/   topología funcional (.pkt)
 ```
 
-Cada práctica sigue el mismo patrón: un `README.md` con el resumen, una carpeta `docs/` con la
-documentación en Markdown y el material de referencia, y las carpetas de las herramientas que
-haya usado.
+Cada entrega sigue el mismo patrón: un `README.md` con la documentación principal, una
+carpeta `docs/` con el material de referencia y las evidencias, y las carpetas de las
+herramientas que haya usado.
 
 ---
 
 ## Herramientas
 
-- **Cisco Packet Tracer** — diagramación de topologías
+- **Cisco Packet Tracer 9.0.1** — diseño, configuración y validación de topologías
+- **Cisco IOS** — VLANs, VTP, PVST, EtherChannel LACP, seguridad de puerto
 - **Markdown** — documentación técnica
 - **Git / GitHub** — control de versiones y entrega
