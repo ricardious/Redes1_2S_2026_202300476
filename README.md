@@ -19,7 +19,8 @@ con su documentación y sus archivos fuente.
 
 | Entrega | Tema | Ponderación | Estado |
 |---|---|---|---|
-| [**Práctica 1**](Practica1/) | QuetzalDev S.A. — Diseño físico de red (Capa 1) | — | Entregada |
+| [**Práctica 1**](Practica1/) | QuetzalDev S.A. — Diseño físico de red (Capa 1) | 7 pts | Entregada |
+| [**Práctica 2**](Practica2/) | Red de la Ciudad Comercial Cayalá — VLANs, VTP, STP y EtherChannel (Capas 1 y 2) | 7 pts | Entregada |
 | [**Proyecto 1**](Proyecto1/) | SmartCity Tech Park — VLANs, VTP, STP y EtherChannel (Capas 1 y 2) | 22 pts | Entregado |
 | [**Actividad 5**](Actividad5/) | Enrutamiento Inter-VLAN — Router-on-a-Stick vs. Switch de Capa 3 (SVI) | 1 pt | Entregada |
 | [**Actividad 6**](Actividad6/) | HSRP básico — Redundancia de gateway con OSPF | 1 pt | Entregada |
@@ -35,6 +36,10 @@ Redes1_2S_2026_202300476/
 │   ├── README.md        resumen de la práctica
 │   ├── docs/            manual técnico, informe, enunciado y planos
 │   └── packet-tracer/   diagrama y archivo editable
+├── Practica2/
+│   ├── README.md        manual técnico
+│   ├── docs/            enunciado, evidencias (PDF) y configuraciones
+│   └── packet-tracer/   topología funcional (.pkt)
 ├── Proyecto1/
 │   ├── README.md        manual técnico
 │   ├── docs/            enunciado, diagramas, evidencias y configuraciones
