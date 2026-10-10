@@ -1,0 +1,382 @@
+SW-Z4-P# show running-config
+Building configuration...
+
+Current configuration : 4710 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+hostname SW-Z4-P
+!
+!
+no profinet
+enable secret 5 $1$mERr$Cfl5/vcIl4I3OLxA9Umvb1
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain-lookup
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 46 priority 4096
+spanning-tree vlan 1,16,99,999 priority 8192
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ description LACP_Z1_Z4_2x1Gbps
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,16,46,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ description TO_SW-Z4-A1
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,46,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface FastEthernet0/2
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/3
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/4
+ description TO_SW-Z1-A1
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,16,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface FastEthernet0/5
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/6
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/7
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/8
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/9
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/10
+ description TO_PC-Z4-01
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/11
+ description TO_PC-Z4-04
+ switchport access vlan 46
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/12
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/13
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/14
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/15
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/16
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/17
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/18
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/19
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/20
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/21
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/22
+ description TO_SW-Z2-P
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,16,46,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface FastEthernet0/23
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/24
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface GigabitEthernet0/1
+ description TO_SW-Z1-P
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,16,46,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+ speed 1000
+!
+interface GigabitEthernet0/2
+ description TO_SW-Z1-P
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,16,46,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+ speed 1000
+!
+interface Vlan1
+ no ip address
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+!
+banner motd ^CAcceso restringido - Red Ciudad Cayala - 202300476^C
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 15 0
+ password 7 08024D5708150443455D2F0B24
+ logging synchronous
+ login
+!
+line aux 0
+!
+line vty 0 4
+ login
+ transport input none
+line vty 5 15
+ login
+ transport input none
+!
+!
+!
+!
+end
+
+SW-Z4-P# show vtp status
+VTP Version capable             : 1 to 2
+VTP version running             : 2
+VTP Domain Name                 : 202300476
+VTP Pruning Mode                : Disabled
+VTP Traps Generation            : Disabled
+Device ID                       : 00D0.D3CB.6D00
+Configuration last modified by 0.0.0.0 at 3-1-93 01:03:52
+Local updater ID is 0.0.0.0 (no valid interface found)
+
+Feature VLAN : 
+--------------
+VTP Operating Mode                : Server
+Maximum VLANs supported locally   : 1005
+Number of existing VLANs          : 12
+Configuration Revision            : 146
+MD5 digest                        : 0xC8 0xC2 0xE3 0xB0 0xAD 0x61 0x79 0x66 
+                                    0x60 0x59 0xB4 0x4E 0x10 0xDA 0xE4 0xB0
+
+SW-Z4-P# show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    
+16   COMERCIO                         active    
+26   CINEPOLIS                        active    
+36   REGUS                            active    
+46   CAYIBEL                          active    Fa0/10, Fa0/11
+56   ARTE                             active    
+99   NATIVA_ADMIN                     active    
+999  BLACKHOLE                        active    Fa0/2, Fa0/3, Fa0/5, Fa0/6
+                                                Fa0/7, Fa0/8, Fa0/9, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/23, Fa0/24
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active
+
+SW-Z4-P# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Po1         on           802.1q         trunking      99
+Fa0/1       on           802.1q         trunking      99
+Fa0/4       on           802.1q         trunking      99
+Fa0/22      on           802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Po1         1,16,46,99
+Fa0/1       1,46,99
+Fa0/4       1,16,99
+Fa0/22      1,16,46,99
+
+Port        Vlans allowed and active in management domain
+Po1         1,16,46,99
+Fa0/1       1,46,99
+Fa0/4       1,16,99
+Fa0/22      1,16,46,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Po1         1,16,46,99
+Fa0/1       1,46
+Fa0/4       1,16,99
+Fa0/22      1,16,46,99
+
+SW-Z4-P# show spanning-tree vlan 46
+VLAN0046
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4142
+             Address     0060.3ED5.D80E
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    4142  (priority 4096 sys-id-ext 46)
+             Address     0060.3ED5.D80E
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/10           Desg FWD 19        128.10   P2p
+Fa0/11           Desg FWD 19        128.11   P2p
+Fa0/22           Desg FWD 19        128.22   P2p
+Po1              Desg FWD 3         128.27   P2p
+
+SW-Z4-P# show etherchannel summary
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 1
+Number of aggregators:           1
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Gig0/1(P) Gig0/2(P)
+
+SW-Z4-P# show spanning-tree vlan 16
+VLAN0016
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4112
+             Address     000C.8573.04ED
+             Cost        3
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8208  (priority 8192 sys-id-ext 16)
+             Address     0060.3ED5.D80E
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/4            Desg FWD 19        128.4    P2p
+Fa0/22           Desg FWD 19        128.22   P2p
+Po1              Root FWD 3         128.27   P2p

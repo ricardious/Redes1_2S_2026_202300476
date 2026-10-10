@@ -1,0 +1,279 @@
+SW-Z3-A1# show running-config
+Building configuration...
+
+Current configuration : 3952 bytes
+!
+version 12.2
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+hostname SW-Z3-A1
+!
+enable secret 5 $1$mERr$Cfl5/vcIl4I3OLxA9Umvb1
+!
+!
+!
+no ip domain-lookup
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/2
+ description TO_PC-Z3-02
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/3
+ description TO_PC-Z3-03
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/4
+ description TO_PC-Z3-05
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/5
+ description TO_PC-Z3-06
+ switchport access vlan 36
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/6
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/7
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/8
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/9
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/10
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/11
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/12
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/13
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/14
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/15
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/16
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/17
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/18
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/19
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/20
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/21
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/22
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/23
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface FastEthernet0/24
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface GigabitEthernet0/1
+ description TO_SW-Z3-P
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,36,99
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface GigabitEthernet0/2
+ description UNUSED_BLACKHOLE
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+banner motd ^CAcceso restringido - Red Ciudad Cayala - 202300476^C
+!
+!
+!
+line con 0
+ password 7 08024D5708150443455D2F0B24
+ logging synchronous
+ login
+ exec-timeout 15 0
+!
+line vty 0 4
+ login
+ transport input none
+line vty 5 15
+ login
+ transport input none
+!
+!
+!
+!
+end
+
+SW-Z3-A1# show vtp status
+VTP Version                     : 2
+Configuration Revision          : 146
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 12
+VTP Operating Mode              : Client
+VTP Domain Name                 : 202300476
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Enabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0xF7 0x0F 0xB3 0x39 0xB6 0x7D 0xFE 0xF8 
+Configuration last modified by 0.0.0.0 at 3-1-93 01:16:04
+
+SW-Z3-A1# show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    
+16   COMERCIO                         active    
+26   CINEPOLIS                        active    
+36   REGUS                            active    Fa0/2, Fa0/3, Fa0/4, Fa0/5
+46   CAYIBEL                          active    
+56   ARTE                             active    
+99   NATIVA_ADMIN                     active    
+999  BLACKHOLE                        active    Fa0/1, Fa0/6, Fa0/7, Fa0/8
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24
+                                                Gig0/2
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active
+
+SW-Z3-A1# show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Gig0/1      on           802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gig0/1      1,36,99
+
+Port        Vlans allowed and active in management domain
+Gig0/1      1,36,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gig0/1      1,36,99
+
+SW-Z3-A1# show spanning-tree vlan 36
+VLAN0036
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4132
+             Address     00E0.F7D4.4E93
+             Cost        19
+             Port        25(GigabitEthernet0/1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32804  (priority 32768 sys-id-ext 36)
+             Address     000B.BEE5.C7DE
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/3            Desg FWD 19        128.3    P2p
+Fa0/4            Desg FWD 19        128.4    P2p
+Fa0/5            Desg FWD 19        128.5    P2p
+Gi0/1            Root FWD 19        128.25   P2p
