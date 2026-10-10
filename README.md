@@ -22,6 +22,7 @@ con su documentación y sus archivos fuente.
 | [**Práctica 1**](Practica1/) | QuetzalDev S.A. — Diseño físico de red (Capa 1) | — | Entregada |
 | [**Proyecto 1**](Proyecto1/) | SmartCity Tech Park — VLANs, VTP, STP y EtherChannel (Capas 1 y 2) | 22 pts | Entregado |
 | [**Actividad 5**](Actividad5/) | Enrutamiento Inter-VLAN — Router-on-a-Stick vs. Switch de Capa 3 (SVI) | 1 pt | Entregada |
+| [**Actividad 6**](Actividad6/) | HSRP básico — Redundancia de gateway con OSPF | 1 pt | Entregada |
 
 ---
 
@@ -38,9 +39,13 @@ Redes1_2S_2026_202300476/
 │   ├── README.md        manual técnico
 │   ├── docs/            enunciado, diagramas, evidencias y configuraciones
 │   └── packet-tracer/   topología funcional (.pkt)
-└── Actividad5/
+├── Actividad5/
+│   ├── README.md        manual técnico
+│   ├── docs/            enunciado, capturas y configuraciones
+│   └── packet-tracer/   topología funcional (.pkt)
+└── Actividad6/
     ├── README.md        manual técnico
-    ├── docs/            enunciado, capturas y configuraciones
+    ├── docs/            enunciado, evidencias (PDF), capturas y configuraciones
     └── packet-tracer/   topología funcional (.pkt)
 ```
 
@@ -53,6 +58,6 @@ herramientas que haya usado.
 ## Herramientas
 
 - **Cisco Packet Tracer 9.0.1** — diseño, configuración y validación de topologías
-- **Cisco IOS** — VLANs, VTP, PVST, EtherChannel LACP, seguridad de puerto, enrutamiento Inter-VLAN
+- **Cisco IOS** — VLANs, VTP, PVST, EtherChannel LACP, seguridad de puerto, enrutamiento Inter-VLAN, HSRP, OSPF
 - **Markdown** — documentación técnica
 - **Git / GitHub** — control de versiones y entrega
