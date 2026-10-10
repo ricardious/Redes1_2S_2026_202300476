@@ -35,7 +35,7 @@ Capturas de ventanas completas de Cisco Packet Tracer 9.0.1, cada una con su bar
 | [`50_etherchannel_summary_SW-Z1-P.png`](capturas/50_etherchannel_summary_SW-Z1-P.png) | show etherchannel summary SW-Z1-P |
 | [`51_etherchannel_port-channel_SW-Z1-P.png`](capturas/51_etherchannel_port-channel_SW-Z1-P.png) | show etherchannel port-channel SW-Z1-P |
 | [`52_etherchannel_summary_SW-Z4-P.png`](capturas/52_etherchannel_summary_SW-Z4-P.png) | show etherchannel summary SW-Z4-P |
-| [`55_show_ip_route_SW-Z1-P.png`](capturas/55_show_ip_route_SW-Z1-P.png) | show ip route en SW-Z1-P (sin routing) |
+| [`55_show_ip_route_SW-Z1-P.png`](capturas/55_show_ip_route_SW-Z1-P.png) | show ip route en SW-Z1-P |
 | [`60_ip_config_PC-Z1-01.png`](capturas/60_ip_config_PC-Z1-01.png) | IP Configuration de PC-Z1-01 |
 | [`61_ipconfig_y_pings_PC-Z1-04.png`](capturas/61_ipconfig_y_pings_PC-Z1-04.png) | ipconfig y pings de PC-Z1-04 |
 | [`62_pings_PC-Z2-04.png`](capturas/62_pings_PC-Z2-04.png) | Pings de PC-Z2-04 |

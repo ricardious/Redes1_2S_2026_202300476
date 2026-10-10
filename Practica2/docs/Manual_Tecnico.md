@@ -10,9 +10,7 @@ La entrega principal contiene **30 PCs instalados**, seis por zona, cinco switch
 
 Se eligió este formato compacto, siguiendo el estilo de los diagramas de ejemplo, porque permite leer la topología y demostrar todos los protocolos. Una primera versión con los 157 hosts instalados se usó como punto de partida ([captura](evidencias/capturas/01_etapa1_red_completa_157pcs.png)).
 
-El objetivo SMART del enunciado V2 especifica conectividad intra-VLAN y aislamiento entre VLANs. En el foro del curso, el auxiliar aclaró: *"no hay que implementar nada de capa 3, todo será por medio de switches"*. La "conectividad entre zonas" se demuestra a nivel de enlace: trunks, VTP, STP y LACP entre los switches de todas las zonas, y pings dentro de cada VLAN que atraviesan varios switches.
-
-Se configuran gateways reservados en los PCs, sin interfaces de gateway activas ni enrutamiento inter-VLAN. Un trunk transporta VLANs, pero no comunica unas VLANs con otras.
+Las pruebas verifican la conectividad dentro de cada VLAN, el aislamiento entre VLANs y el funcionamiento de los trunks, VTP, STP y LACP entre switches.
 
 ## 2. Investigación y análisis de las zonas
 
@@ -60,7 +58,7 @@ Se utiliza VLSM dentro de 10.76.0.0/24. Se reserva el primer host utilizable com
 | Administración de trunks | 99 / NATIVA_ADMIN | Sin subred configurada | No aplica | Sin hosts | No aplica |
 | Puertos no utilizados | 999 / BLACKHOLE | Sin subred configurada | No aplica | Sin hosts activos | No aplica |
 
-Las subredes /26, /27 y /28 admiten 62, 30 y 14 IPs útiles respectivamente. Aun reservando el gateway, alcanzan para la demanda definida. VLAN 99 se utiliza como nativa consistente; no se configuró una SVI de administración ni acceso remoto.
+Las subredes /26, /27 y /28 admiten 62, 30 y 14 IPs útiles respectivamente. Aun reservando el gateway, alcanzan para la demanda definida. VLAN 99 se utiliza como nativa en todos los trunks.
 
 ### Hosts instalados
 
@@ -119,7 +117,7 @@ Se intentó fibra entre Z2 y Z3, pero el enlace no se creó en estos puertos del
 | SW-Z2-P Gi0/1 | SW-Z3-P Gi0/1 | 1,36,99 |
 | SW-Z2-P Fa0/23 | SW-Z5-P Fa0/23 | 1,56,99 |
 
-Todos los trunks tienen VLAN nativa 99 y listas explícitas. Criterio de poda: **una VLAN viaja por un trunk solo si detrás de ese enlace hay hosts de esa VLAN o un camino alternativo hacia ellos**. Los ramales Z3 y Z5 reciben únicamente su propia VLAN, la nativa y la de control; si recibieran las demás VLANs, los broadcasts de otras zonas los inundarían sin motivo. El anillo Z1-Z2-Z4 transporta solo **16 y 46**: los respaldos cruzados llevan VLAN 16 hasta SW-Z4-P y VLAN 46 hasta SW-Z1-P, y SW-Z2-P ofrece el camino alternativo si cae Po1. VLAN 26 no sale de Z2, y 36 y 56 cuelgan de SW-Z2-P por sus ramales. Como no hay capa 3, no hace falta llevar todas las VLANs a un punto central. En la simulación, el broadcast ARP de VLAN 36 termina en SW-Z2-P y no llega a Z1 ni a Z4. Con Po1 y los dos uplinks de acceso apagados, VLAN 16 y 46 siguen respondiendo a través de SW-Z2-P (4/4). VLAN 1 se permite para compatibilidad del tráfico de control PVST+ en esta versión de Packet Tracer; no tiene PCs asignados y no es la VLAN nativa. VLAN 999 no se permite en los trunks. Los parámetros de miembros y Port-channel deben coincidir.
+Todos los trunks tienen VLAN nativa 99 y listas explícitas. Criterio de poda: **una VLAN viaja por un trunk solo si detrás de ese enlace hay hosts de esa VLAN o un camino alternativo hacia ellos**. Los ramales Z3 y Z5 reciben únicamente su propia VLAN, la nativa y la de control; si recibieran las demás VLANs, los broadcasts de otras zonas los inundarían sin motivo. El anillo Z1-Z2-Z4 transporta solo **16 y 46**: los respaldos cruzados llevan VLAN 16 hasta SW-Z4-P y VLAN 46 hasta SW-Z1-P, y SW-Z2-P ofrece el camino alternativo si cae Po1. VLAN 26 no sale de Z2, y 36 y 56 cuelgan de SW-Z2-P por sus ramales. En la simulación, el broadcast ARP de VLAN 36 termina en SW-Z2-P y no llega a Z1 ni a Z4. Con Po1 y los dos uplinks de acceso apagados, VLAN 16 y 46 siguen respondiendo a través de SW-Z2-P (4/4). VLAN 1 se permite para compatibilidad del tráfico de control PVST+ en esta versión de Packet Tracer; no tiene PCs asignados y no es la VLAN nativa. VLAN 999 no se permite en los trunks. Los parámetros de miembros y Port-channel deben coincidir.
 
 Durante la verificación, al excluir VLAN 1, la simulación mostró BPDUs que los 3560 no entregaban a un proceso STP y volvían a difundir, con pérdidas de cola y bloqueos en puertos de PCs. Permitir explícitamente VLAN 1 en los trunks eliminó el fallo observado. Es un ajuste de compatibilidad comprobado en el simulador, no una afirmación de que todo switch real requiera transportar datos de VLAN 1. Se fijó SW-Z1-P como root de VLAN 1 con prioridad 4096 y SW-Z4-P como respaldo con 8192.
 
@@ -188,4 +186,4 @@ Los scripts [CLI por switch](scripts/) contienen la configuración completa. Se 
 
 Consultar [el informe](Informe_de_Desarrollo.md) para los resultados reales y la simulación ARP/ICMP. Las salidas `show` y las 46 capturas de Packet Tracer están en [`evidencias/`](evidencias/README.md).
 
-`show ip route` en el 3560 sin routing muestra información de host y que no hay gateway predeterminado del switch. No prueba conectividad inter-VLAN ni contradice que los PCs tengan direcciones de gateway reservadas.
+La salida de `show ip route` del 3560 se incluye en el informe y muestra el estado del gateway predeterminado y la caché de redirecciones ICMP.

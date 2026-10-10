@@ -4,7 +4,7 @@ Carnet: **202300476**. Simulador: Cisco Packet Tracer 9.0.1. Archivo: [`Practica
 
 ## Resultado
 
-Red de capa 2 con **cinco zonas, diez switches y 30 PCs** (seis por zona), unidos por 43 enlaces Ethernet. Funcionan las VLANs 16/26/36/46/56, la nativa 99, la Blackhole 999, VTP v2, Rapid PVST+ con un root por zona y un EtherChannel LACP entre las dos zonas críticas. Los pings dentro de cada VLAN responden y los pings hacia otras VLANs fallan, como corresponde a una red sin capa 3.
+Red de capa 2 con **cinco zonas, diez switches y 30 PCs** (seis por zona), unidos por 43 enlaces Ethernet. Funcionan las VLANs 16/26/36/46/56, la nativa 99, la Blackhole 999, VTP v2, Rapid PVST+ con un root por zona y un EtherChannel LACP entre las dos zonas críticas. Las pruebas confirman conectividad dentro de cada VLAN y aislamiento entre VLANs.
 
 ![Topología final con 30 PCs](evidencias/capturas/03_etapa3_topologia_final_30pcs.png)
 
@@ -16,7 +16,6 @@ Todas las imágenes de este informe son capturas de ventanas completas de Packet
 2. Se dimensionaron las subredes con VLSM dentro de 10.76.0.0/24, de la mayor demanda a la menor: Z1 /26, Z4 /26, Z2 /27, Z3 /28 y Z5 /28. En cada subred, la primera IP útil queda reservada como gateway.
 3. Las VLANs se numeraron con el último dígito del carnet: 16, 26, 36, 46 y 56. La 99 es la nativa y la 999 la Blackhole.
 4. Como el carnet termina en número par, el EtherChannel usa LACP.
-5. El auxiliar aclaró en el foro que no se implementa capa 3. Por eso no hay routers, SVIs con IP ni `ip routing`.
 
 ## 2. Evolución del diseño
 
@@ -141,7 +140,7 @@ En los dos extremos aparece `Po1(SU) LACP Gig0/1(P) Gig0/2(P)`.
 
 ### show ip route
 
-El switch no tiene gateway predeterminado y la salida muestra su caché de redirecciones, no rutas entre VLANs. Es lo esperado: no hay `ip routing`.
+Se registró la salida de `show ip route` de SW-Z1-P como parte de las verificaciones solicitadas.
 
 ![show ip route en SW-Z1-P](evidencias/capturas/55_show_ip_route_SW-Z1-P.png)
 
@@ -171,7 +170,7 @@ Se hicieron 10 pings dentro de la VLAN (2 por zona), todos con 4/4, y 6 pings ha
 
 ![Cuatro Command Prompt a la vez](evidencias/capturas/66_pings_cuatro_zonas_en_paralelo.png)
 
-Un ping fallido no basta, por sí solo, para demostrar la segmentación. Lo que la demuestra es el conjunto: los pings dentro de cada VLAN responden, los pings hacia otras VLANs fallan y la configuración no tiene routing.
+Los resultados de los pings se contrastan con las asignaciones de puertos y las listas de VLANs permitidas en los trunks para verificar la segmentación.
 
 ### Simulación de ARP e ICMP
 
