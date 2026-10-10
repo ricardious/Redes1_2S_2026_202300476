@@ -8,7 +8,7 @@ Capturas de ventanas completas de Cisco Packet Tracer 9.0.1, cada una con su bar
 |---|---|
 | [`01_etapa1_red_completa_157pcs.png`](capturas/01_etapa1_red_completa_157pcs.png) | Etapa 1: primera red con los 157 hosts (15 switches) |
 | [`02_etapa2_compacta_15pcs.png`](capturas/02_etapa2_compacta_15pcs.png) | Etapa 2: modelo compacto con 3 PCs por zona |
-| [`03_etapa3_topologia_final_30pcs.png`](capturas/03_etapa3_topologia_final_30pcs.png) | Etapa 3: topología final (30 PCs, sin cables cruzados) |
+| [`03_etapa3_topologia_final_30pcs.png`](capturas/03_etapa3_topologia_final_30pcs.png) | Etapa 3: topología final (30 PCs) |
 | [`04_config_por_cli_SW-Z5-A1.png`](capturas/04_config_por_cli_SW-Z5-A1.png) | Configuración por CLI: bloque de interfaces de SW-Z5-A1 |
 | [`05_running_config_SW-Z5-A1.png`](capturas/05_running_config_SW-Z5-A1.png) | running-config de SW-Z5-A1 |
 | [`10_vtp_servidor_SW-Z1-P.png`](capturas/10_vtp_servidor_SW-Z1-P.png) | show vtp status: servidor SW-Z1-P |

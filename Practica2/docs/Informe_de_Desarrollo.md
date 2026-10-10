@@ -23,7 +23,7 @@ Todas las imágenes de este informe son capturas de ventanas completas de Packet
 |---|---|
 | 1. Primera red con los 157 hosts de la demanda proyectada y 15 switches | ![Red completa](evidencias/capturas/01_etapa1_red_completa_157pcs.png) |
 | 2. Modelo compacto con 3 PCs por zona, para que el diagrama se lea con claridad | ![Compacta](evidencias/capturas/02_etapa2_compacta_15pcs.png) |
-| 3. Modelo final con 6 PCs por zona, zonas dibujadas, leyenda y sin cables cruzados | ![Final](evidencias/capturas/03_etapa3_topologia_final_30pcs.png) |
+| 3. Modelo final con 6 PCs por zona | ![Final](evidencias/capturas/03_etapa3_topologia_final_30pcs.png) |
 
 La red de 157 PCs era difícil de leer y no aportaba nada a la demostración de los protocolos. Por eso se redujo a un modelo compacto. Las cantidades 60/28/12/50/7 se siguen usando para calcular las subredes.
 
@@ -60,13 +60,7 @@ Ejemplo: bloque de interfaces de SW-Z5-A1 aplicado por CLI y el `running-config`
 
 ## 5. Diseño visual
 
-- Z2 queda en el centro de la fila superior como núcleo, con los ramales Z3 y Z5 a cada lado.
-- Abajo, Z4 a la izquierda y Z1 a la derecha, unidas por Po1 en horizontal. Un respaldo cruzado pasa por encima de Po1 y el otro por debajo, así que ningún cable se cruza.
-- Cada zona tiene fondo pastel, borde de su color y un rótulo con VLAN, subred, criticidad y rol del principal.
-- Los enlaces entre switches muestran sus puertos.
-- La leyenda explica colores, tipos de cable y estados de puerto, y los paneles inferiores resumen VLANs, trunks y protocolos.
-
-Se comprobó geométricamente que ningún cable corta a otro ni pasa sobre un dispositivo o una etiqueta.
+Las zonas se distinguen por color y rótulos con VLAN, subred, criticidad y rol del switch principal. Los enlaces entre switches muestran sus puertos. La leyenda y los paneles inferiores resumen el cableado, las VLANs, los trunks y los protocolos.
 
 ## 6. Pruebas
 
@@ -231,7 +225,7 @@ También se apagaron Po1 y los uplinks de acceso de Z1 y Z4 al mismo tiempo. Las
 | Rapid PVST+ y root por zona | Prioridades en los scripts y salidas de los cinco roots |
 | LACP y conectividad | `Po1(SU)` con dos miembros, pings y pruebas de fallo |
 | Manual, informe y scripts | [Manual técnico](Manual_Tecnico.md), este informe y [`scripts/`](scripts/) |
-| Presentación | Zonas dibujadas, leyenda, nombres consistentes y cero cruces de cables |
+| Presentación | Zonas identificadas, leyenda y nombres consistentes |
 | Comprensión teórico-práctica | Simulación ARP/ICMP en modo Simulation |
 
 Las salidas `show` y el `running-config` de los diez switches están en [`evidencias/salidas_switches/`](evidencias/salidas_switches/). Para revisar en vivo, abrir el `.pkt`, esperar a que converja (o pulsar Fast Forward Time) y repetir los comandos y pings.
