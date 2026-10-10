@@ -59,11 +59,11 @@ Los establecimientos se identificaron en el [directorio oficial de Cayalá](http
 
 | Zona | Rol y usuarios | Demanda | Tráfico estimado de diseño | Criticidad y decisión |
 |---|---|---:|---|---|
-| 🟦 **1 — Área comercial** | Personal de tiendas y operaciones comerciales | 60 hosts | Alto por cantidad; POS, inventario y aplicaciones web | **Alta:** dos caminos por el triángulo y LACP con Z4 |
-| 🟥 **2 — Cinépolis** | Personal de boletería y operación del cine | 28 hosts | Medio; transacciones y sistemas operativos, sin asumir streaming de películas | **Media:** nodo de distribución del triángulo |
-| 🟧 **3 — REGUS** | Personal y usuarios de oficinas | 12 hosts | Medio; documentos, reuniones y aplicaciones de oficina | **Media:** ramal en estrella, menor costo y complejidad |
-| 🟩 **4 — Cayibel** | Personal de establecimientos gastronómicos | 50 hosts | Alto por concurrencia de pedidos y pagos | **Alta:** LACP y caminos alternativos |
-| 🟪 **5 — Art and Crafts** | Personal y usuarios del establecimiento | 7 hosts | Bajo; operaciones administrativas y consultas web | **Baja:** ramal sencillo |
+| **1 — Área comercial** | Personal de tiendas y operaciones comerciales | 60 hosts | Alto por cantidad; POS, inventario y aplicaciones web | **Alta:** dos caminos por el triángulo y LACP con Z4 |
+| **2 — Cinépolis** | Personal de boletería y operación del cine | 28 hosts | Medio; transacciones y sistemas operativos, sin asumir streaming de películas | **Media:** nodo de distribución del triángulo |
+| **3 — REGUS** | Personal y usuarios de oficinas | 12 hosts | Medio; documentos, reuniones y aplicaciones de oficina | **Media:** ramal en estrella, menor costo y complejidad |
+| **4 — Cayibel** | Personal de establecimientos gastronómicos | 50 hosts | Alto por concurrencia de pedidos y pagos | **Alta:** LACP y caminos alternativos |
+| **5 — Art and Crafts** | Personal y usuarios del establecimiento | 7 hosts | Bajo; operaciones administrativas y consultas web | **Baja:** ramal sencillo |
 
 La demanda de las zonas comercial y gastronómica justifica una mayor capacidad entre sus switches principales. En las demás zonas se utilizan menos enlaces, de acuerdo con el tráfico y la disponibilidad estimados.
 
@@ -166,11 +166,11 @@ El direccionamiento utiliza **VLSM dentro de 10.76.0.0/24**. La primera direcci�
 
 | Zona | VLAN / nombre | Subred | Máscara | Hosts proyectados | Gateway reservado |
 |---|---|---|---|---:|---|
-| 🟦 Z1 | **16** / COMERCIO | 10.76.0.0/26 | 255.255.255.192 | 60 | 10.76.0.1 |
-| 🟥 Z2 | **26** / CINEPOLIS | 10.76.0.128/27 | 255.255.255.224 | 28 | 10.76.0.129 |
-| 🟧 Z3 | **36** / REGUS | 10.76.0.160/28 | 255.255.255.240 | 12 | 10.76.0.161 |
-| 🟩 Z4 | **46** / CAYIBEL | 10.76.0.64/26 | 255.255.255.192 | 50 | 10.76.0.65 |
-| 🟪 Z5 | **56** / ARTE | 10.76.0.176/28 | 255.255.255.240 | 7 | 10.76.0.177 |
+| Z1 | **16** / COMERCIO | 10.76.0.0/26 | 255.255.255.192 | 60 | 10.76.0.1 |
+| Z2 | **26** / CINEPOLIS | 10.76.0.128/27 | 255.255.255.224 | 28 | 10.76.0.129 |
+| Z3 | **36** / REGUS | 10.76.0.160/28 | 255.255.255.240 | 12 | 10.76.0.161 |
+| Z4 | **46** / CAYIBEL | 10.76.0.64/26 | 255.255.255.192 | 50 | 10.76.0.65 |
+| Z5 | **56** / ARTE | 10.76.0.176/28 | 255.255.255.240 | 7 | 10.76.0.177 |
 | Administración de trunks | **99** / NATIVA_ADMIN | Sin subred configurada | No aplica | Sin hosts | No aplica |
 | Puertos no utilizados | **999** / BLACKHOLE | Sin subred configurada | No aplica | Sin hosts activos | No aplica |
 

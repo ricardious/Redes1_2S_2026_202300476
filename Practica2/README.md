@@ -22,7 +22,7 @@ Red de **cinco zonas de Ciudad Cayalá** en Cisco Packet Tracer: **30 PCs y 10 s
 | Elemento | Configuración |
 |---|---|
 | **Direccionamiento** | VLSM sobre `10.76.0.0/24` (/26, /26, /27, /28, /28) |
-| **VLANs de zona** | 🟦 16 Comercio · 🟥 26 Cinépolis · 🟧 36 REGUS · 🟩 46 Cayibel · 🟪 56 Arte |
+| **VLANs de zona** | 16 Comercio · 26 Cinépolis · 36 REGUS · 46 Cayibel · 56 Arte |
 | **VLANs especiales** | 99 nativa · 999 Blackhole (204 puertos libres, apagados) |
 | **VTP** | Versión 2, dominio `202300476`: 5 Server y 5 Client |
 | **STP** | Rapid PVST+; el principal de cada zona es raíz de su VLAN (prioridad 4096) |
@@ -35,11 +35,11 @@ Red de **cinco zonas de Ciudad Cayalá** en Cisco Packet Tracer: **30 PCs y 10 s
 
 | Documento | Contenido |
 |---|---|
-| 📘 [**Manual técnico**](docs/Manual_Tecnico.md) | Análisis de zonas, topología, VLSM, trunks, VTP, STP, LACP y dominios |
-| 📗 [**Informe de desarrollo**](docs/Informe_de_Desarrollo.md) | Construcción paso a paso, pruebas con capturas y problemas resueltos |
-| ⌨️ [**Scripts CLI**](docs/scripts/) | Configuración completa de los 10 switches |
-| 🖼️ [**Evidencias**](docs/evidencias/README.md) | 46 capturas de Packet Tracer y salidas `show` de cada switch |
-| 📋 [**Tabla de hosts**](docs/Manual_Tecnico.md#hosts-instalados) | IP, máscara, gateway y puerto de los 30 PCs |
+| [**Manual técnico**](docs/Manual_Tecnico.md) | Análisis de zonas, topología, VLSM, trunks, VTP, STP, LACP y dominios |
+| [**Informe de desarrollo**](docs/Informe_de_Desarrollo.md) | Construcción paso a paso, pruebas con capturas y problemas resueltos |
+| [**Scripts CLI**](docs/scripts/) | Configuración completa de los 10 switches |
+| [**Evidencias**](docs/evidencias/README.md) | 46 capturas de Packet Tracer y salidas `show` de cada switch |
+| [**Tabla de hosts**](docs/Manual_Tecnico.md#hosts-instalados) | IP, máscara, gateway y puerto de los 30 PCs |
 
 ---
 

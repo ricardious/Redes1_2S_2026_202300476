@@ -35,14 +35,14 @@ Se implementó una red de **cinco zonas, diez switches y 30 PCs**, conectados me
 
 | Verificación | Resultado |
 |---|---|
-| VTP v2, 5 Server y 5 Client con la misma revisión | ✅ |
-| VLANs de zona, nativa 99 y Blackhole 999 | ✅ |
-| Trunks con listas explícitas | ✅ |
-| Un puente raíz por zona (Rapid PVST+) | ✅ |
-| EtherChannel `Po1(SU)` con dos miembros LACP | ✅ |
-| Pings dentro de la VLAN | ✅ 10/10 con 4/4 |
-| Pings hacia otras VLANs | ✅ 6/6 sin respuesta (0/4), como se esperaba |
-| Caída de un miembro de Po1 y de un enlace ascendente | ✅ Ping 4/4 por el camino de respaldo |
+| VTP v2, 5 Server y 5 Client con la misma revisión | [OK] |
+| VLANs de zona, nativa 99 y Blackhole 999 | [OK] |
+| Trunks con listas explícitas | [OK] |
+| Un puente raíz por zona (Rapid PVST+) | [OK] |
+| EtherChannel `Po1(SU)` con dos miembros LACP | [OK] |
+| Pings dentro de la VLAN | [OK] 10/10 con 4/4 |
+| Pings hacia otras VLANs | [OK] 6/6 sin respuesta (0/4), como se esperaba |
+| Caída de un miembro de Po1 y de un enlace ascendente | [OK] Ping 4/4 por el camino de respaldo |
 
 ![Topología final con 30 PCs](evidencias/capturas/03_etapa3_topologia_final_30pcs.png)
 
@@ -59,11 +59,11 @@ Se implementó una red de **cinco zonas, diez switches y 30 PCs**, conectados me
 
 | Orden | Zona | Demanda | Subred | VLAN |
 |---:|---|---:|---|---:|
-| 1 | 🟦 Z1 — Área comercial | 60 | 10.76.0.0/26 | 16 |
-| 2 | 🟩 Z4 — Cayibel | 50 | 10.76.0.64/26 | 46 |
-| 3 | 🟥 Z2 — Cinépolis | 28 | 10.76.0.128/27 | 26 |
-| 4 | 🟧 Z3 — REGUS | 12 | 10.76.0.160/28 | 36 |
-| 5 | 🟪 Z5 — Art and Crafts | 7 | 10.76.0.176/28 | 56 |
+| 1 | Z1 — Área comercial | 60 | 10.76.0.0/26 | 16 |
+| 2 | Z4 — Cayibel | 50 | 10.76.0.64/26 | 46 |
+| 3 | Z2 — Cinépolis | 28 | 10.76.0.128/27 | 26 |
+| 4 | Z3 — REGUS | 12 | 10.76.0.160/28 | 36 |
+| 5 | Z5 — Art and Crafts | 7 | 10.76.0.176/28 | 56 |
 
 ---
 
@@ -147,7 +147,7 @@ Las siguientes capturas muestran el bloque de interfaces aplicado en SW-Z5-A1 y 
 
 | Elemento | Cómo se representa |
 |---|---|
-| Zonas | Fondo de color propio: 🟦 Z1, 🟥 Z2, 🟧 Z3, 🟩 Z4 y 🟪 Z5 |
+| Zonas | Fondo de color propio: azul Z1, rojo Z2, naranja Z3, verde Z4 y morado Z5 |
 | Rótulo de cada zona | VLAN, subred, criticidad y rol del switch principal |
 | Enlaces entre switches | Puertos de cada extremo |
 | Leyenda | Colores, tipos de cable y estados de puerto |
@@ -240,11 +240,11 @@ Cada switch principal muestra `This bridge is the root` para la VLAN de su zona.
 
 | VLAN | Puente raíz | Prioridad mostrada | Resultado |
 |---:|---|---:|:---:|
-| 16 | SW-Z1-P | 4112 | ✅ |
-| 26 | SW-Z2-P | 4122 | ✅ |
-| 36 | SW-Z3-P | 4132 | ✅ |
-| 46 | SW-Z4-P | 4142 | ✅ |
-| 56 | SW-Z5-P | 4152 | ✅ |
+| 16 | SW-Z1-P | 4112 | [OK] |
+| 26 | SW-Z2-P | 4122 | [OK] |
+| 36 | SW-Z3-P | 4132 | [OK] |
+| 46 | SW-Z4-P | 4142 | [OK] |
+| 56 | SW-Z5-P | 4152 | [OK] |
 
 En SW-Z1-A1, Gi0/1 aparece como `Root FWD` y Gi0/2, que proporciona el respaldo hacia Z4, como `Altn BLK`.
 
@@ -314,13 +314,11 @@ Se realizaron diez pruebas de ping dentro de la misma VLAN, dos por zona, y seis
 
 | Origen | Misma VLAN (4/4) | Otra VLAN (0/4) |
 |---|---|---|
-| PC-Z1-04 | ✅ 10.76.0.3 · ✅ 10.76.0.6 | ❌ 10.76.0.130 · ❌ 10.76.0.66 |
-| PC-Z2-04 | ✅ 10.76.0.130 · ✅ 10.76.0.135 | ❌ 10.76.0.2 |
-| PC-Z3-05 | ✅ 10.76.0.162 · ✅ 10.76.0.167 | ❌ 10.76.0.178 |
-| PC-Z4-01 | ✅ 10.76.0.67 · ✅ 10.76.0.70 | ❌ 10.76.0.162 |
-| PC-Z5-01 | ✅ 10.76.0.179 · ✅ 10.76.0.183 | ❌ 10.76.0.66 |
-
-<sub>✅ respondió 4/4 · ❌ sin respuesta (0/4), el resultado esperado entre VLANs distintas.</sub>
+| PC-Z1-04 | 10.76.0.3 · 10.76.0.6 | 10.76.0.130 · 10.76.0.66 |
+| PC-Z2-04 | 10.76.0.130 · 10.76.0.135 | 10.76.0.2 |
+| PC-Z3-05 | 10.76.0.162 · 10.76.0.167 | 10.76.0.178 |
+| PC-Z4-01 | 10.76.0.67 · 10.76.0.70 | 10.76.0.162 |
+| PC-Z5-01 | 10.76.0.179 · 10.76.0.183 | 10.76.0.66 |
 
 Ocho de las pruebas internas atravesaron el trunk entre el switch principal y el secundario. Las otras dos se realizaron entre PCs del mismo switch: PC-Z2-04 → 10.76.0.130, en SW-Z2-P, y PC-Z3-05 → 10.76.0.167, en SW-Z3-A1.
 
@@ -397,10 +395,10 @@ sequenceDiagram
 
 | Paso | Acción | Resultado |
 |---:|---|---|
-| 1 | Se deshabilitó `Gi0/1` de SW-Z1-P, uno de los miembros de Po1 | ✅ El canal mantuvo `Po1(SU)`, con `Gig0/1(D)` y `Gig0/2(P)` |
-| 2 | Con ese miembro aún deshabilitado, se desactivó `Fa0/1` de SW-Z1-P, que conecta con SW-Z1-A1 | ✅ En el secundario, Gi0/2 pasó a `Root FWD`, con costo 23. Camino de respaldo: Z1-A1 → Z4-P → Po1 → Z1-P |
-| 3 | Desde PC-Z1-04 se ejecutaron pings hacia 10.76.0.3 y 10.76.0.7, PCs conectados a SW-Z1-A1 | ✅ Ambos respondieron 4/4 por el camino de respaldo |
-| 4 | Se restablecieron las interfaces con `no shutdown` | ✅ Los dos miembros de Po1 volvieron a `(P)` y los trunks recuperaron su estado inicial |
+| 1 | Se deshabilitó `Gi0/1` de SW-Z1-P, uno de los miembros de Po1 | [OK] El canal mantuvo `Po1(SU)`, con `Gig0/1(D)` y `Gig0/2(P)` |
+| 2 | Con ese miembro aún deshabilitado, se desactivó `Fa0/1` de SW-Z1-P, que conecta con SW-Z1-A1 | [OK] En el secundario, Gi0/2 pasó a `Root FWD`, con costo 23. Camino de respaldo: Z1-A1 → Z4-P → Po1 → Z1-P |
+| 3 | Desde PC-Z1-04 se ejecutaron pings hacia 10.76.0.3 y 10.76.0.7, PCs conectados a SW-Z1-A1 | [OK] Ambos respondieron 4/4 por el camino de respaldo |
+| 4 | Se restablecieron las interfaces con `no shutdown` | [OK] Los dos miembros de Po1 volvieron a `(P)` y los trunks recuperaron su estado inicial |
 
 En una prueba adicional se deshabilitaron simultáneamente Po1 y los enlaces ascendentes de acceso de Z1 y Z4. Los pings dentro de las VLANs 16 y 46 mantuvieron cuatro respuestas de cuatro a través de SW-Z2-P.
 
