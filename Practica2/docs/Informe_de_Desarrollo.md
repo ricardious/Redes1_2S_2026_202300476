@@ -4,15 +4,15 @@ Carnet: **202300476**. Simulador: Cisco Packet Tracer 9.0.1. Archivo: [`Practica
 
 ## Resultado
 
-Red de capa 2 con **cinco zonas, diez switches y 30 PCs** (seis por zona), unidos por 43 enlaces Ethernet. Funcionan las VLANs 16/26/36/46/56, la nativa 99, la Blackhole 999, VTP v2, Rapid PVST+ con un root por zona y un EtherChannel LACP entre las dos zonas críticas. Las pruebas confirman conectividad dentro de cada VLAN y aislamiento entre VLANs.
+Se implementó una red de **cinco zonas, diez switches y 30 PCs**, conectados mediante 43 enlaces Ethernet. La configuración incluye las VLANs 16, 26, 36, 46 y 56, la VLAN nativa 99, la VLAN Blackhole 999, VTP v2, Rapid PVST+ y un EtherChannel con LACP entre las dos zonas críticas. Cada switch principal actúa como puente raíz de la VLAN de su zona. Las pruebas verificaron la conectividad dentro de cada VLAN y el aislamiento entre VLANs.
 
 ![Topología final con 30 PCs](evidencias/capturas/03_etapa3_topologia_final_30pcs.png)
 
-Todas las imágenes de este informe son capturas de ventanas completas de Packet Tracer. El índice está en [`evidencias/README.md`](evidencias/README.md).
+Las capturas de Packet Tracer utilizadas en este informe se organizan en el [índice de evidencias](evidencias/README.md).
 
 ## 1. Planificación
 
-1. Se identificaron los cinco establecimientos en el directorio de Cayalá y se estimó el rol, el tráfico y la criticidad de cada zona (sección 2 del [manual técnico](Manual_Tecnico.md)).
+1. Se identificaron los cinco establecimientos en el directorio de Cayalá y se definieron los usuarios, el tráfico estimado y la criticidad de cada zona, según la sección 2 del [manual técnico](Manual_Tecnico.md).
 2. Se dimensionaron las subredes con VLSM dentro de 10.76.0.0/24, de la mayor demanda a la menor: Z1 /26, Z4 /26, Z2 /27, Z3 /28 y Z5 /28. En cada subred, la primera IP útil queda reservada como gateway.
 3. Las VLANs se numeraron con el último dígito del carnet: 16, 26, 36, 46 y 56. La 99 es la nativa y la 999 la Blackhole.
 4. Como el carnet termina en número par, el EtherChannel usa LACP.
@@ -22,37 +22,39 @@ Todas las imágenes de este informe son capturas de ventanas completas de Packet
 | Etapa | Captura |
 |---|---|
 | 1. Primera red con los 157 hosts de la demanda proyectada y 15 switches | ![Red completa](evidencias/capturas/01_etapa1_red_completa_157pcs.png) |
-| 2. Modelo compacto con 3 PCs por zona, para que el diagrama se lea con claridad | ![Compacta](evidencias/capturas/02_etapa2_compacta_15pcs.png) |
+| 2. Modelo intermedio con 3 PCs por zona | ![Compacta](evidencias/capturas/02_etapa2_compacta_15pcs.png) |
 | 3. Modelo final con 6 PCs por zona | ![Final](evidencias/capturas/03_etapa3_topologia_final_30pcs.png) |
 
-La red de 157 PCs era difícil de leer y no aportaba nada a la demostración de los protocolos. Por eso se redujo a un modelo compacto. Las cantidades 60/28/12/50/7 se siguen usando para calcular las subredes.
+El diseño inicial incluía 157 PCs. Después se redujo a tres PCs por zona y, finalmente, se amplió a seis por zona para las pruebas. El cálculo de subredes conservó las cantidades del enunciado: 60, 28, 12, 50 y 7 hosts.
 
 ## 3. Construcción de la topología
 
-1. Cada zona tiene un switch principal 3560-24PS y uno secundario 2960-24TT.
-2. Los PCs se conectan con cable directo: PC 01 y PC 04 al principal (Fa0/10 y Fa0/11), y PC 02, 03, 05 y 06 al secundario (Fa0/2 a Fa0/5). Así, todo ping entre un PC del principal y uno del secundario cruza un trunk.
-3. Los switches se unen con cable cruzado:
-   - **Triángulo** entre los principales de Z1, Z2 y Z4. El lado Z1-Z4 son dos enlaces Gigabit que forman Po1.
-   - **Ramales en estrella** de Z3 y Z5, que cuelgan de SW-Z2-P.
-   - **Respaldos cruzados:** cada secundario de Z1 y Z4 tiene un segundo uplink hacia el principal de la otra zona crítica.
-4. Se intentó un enlace de fibra entre Z2 y Z3, pero el 3560 no tiene puertos ópticos en este simulador. Se usó cobre Gigabit.
+1. Se colocó un switch principal 3560-24PS y uno secundario 2960-24TT en cada zona.
+2. Se conectaron los PCs con cable directo: PC 01 y PC 04 al principal, en Fa0/10 y Fa0/11, y PC 02, 03, 05 y 06 al secundario, en Fa0/2 a Fa0/5.
+3. Se conectaron los switches con cable cruzado para formar:
+
+   - Un triángulo entre los principales de Z1, Z2 y Z4, con dos enlaces Gigabit agrupados en Po1 entre Z1 y Z4.
+   - Dos ramales en estrella, de Z3 y Z5 hacia SW-Z2-P.
+   - Enlaces de respaldo desde cada secundario de Z1 y Z4 hacia el principal de la otra zona crítica.
+
+4. Se probó un enlace de fibra entre Z2 y Z3. Como los puertos disponibles del 3560 en el simulador no permitieron establecerlo, se utilizó cobre Gigabit.
 
 ## 4. Configuración por CLI
 
-Todos los switches se configuraron solo por CLI. Los comandos completos de cada uno están en [`scripts/`](scripts/). Se aplicaron en este orden:
+Los switches se configuraron mediante CLI. Los comandos completos de cada equipo se encuentran en [`scripts/`](scripts/). La configuración abarcó los siguientes aspectos:
 
 1. **Acceso al switch:** `hostname`, `enable secret`, contraseña y `exec-timeout` en la consola, VTY cerradas, `service password-encryption` y banner.
-2. **VTP:** dominio `202300476`, versión 2 y contraseña. Los cinco principales son Server y los cinco secundarios Client.
+2. **VTP:** dominio `202300476`, versión 2 y contraseña. Los cinco principales se configuraron como servidores (Server) y los cinco secundarios como clientes (Client).
 3. **VLANs:** se crearon las siete VLANs en SW-Z1-P y los demás switches las aprendieron por VTP.
-4. **Trunks:** 802.1Q con nativa 99, `nonegotiate` y lista explícita de VLANs. Una VLAN solo viaja por un trunk si detrás hay hosts de esa VLAN o un camino alternativo hacia ellos. El triángulo lleva `1,16,46,99` y los ramales y accesos `1,X6,99`.
-5. **Rapid PVST+:** cada principal es root de su VLAN con prioridad 4096, y el respaldo usa 8192.
+4. **Trunks:** 802.1Q con VLAN nativa 99, `nonegotiate` y listas explícitas de VLANs permitidas. El triángulo transporta `1,16,46,99`; los ramales y enlaces de acceso transportan la VLAN de su zona junto con la 1 y la 99.
+5. **Rapid PVST+:** cada principal se estableció como puente raíz de su VLAN, con prioridad 4096, y se asignó prioridad 8192 al respaldo.
 6. **Puertos de PC:** modo access en la VLAN de la zona, con PortFast y BPDU Guard.
 7. **Puertos sin uso:** VLAN 999, descripción `UNUSED_BLACKHOLE` y `shutdown`.
 8. **EtherChannel:** `channel-group 1 mode active` en Gi0/1 y Gi0/2 de SW-Z1-P y SW-Z4-P. Los miembros y Po1 tienen los mismos parámetros de trunk.
 9. **PCs:** IP, máscara y gateway reservado según la [tabla de hosts](Manual_Tecnico.md#hosts-instalados).
-10. `write memory` en los diez switches.
+10. **Guardado:** `write memory` en los diez switches.
 
-Ejemplo: bloque de interfaces de SW-Z5-A1 aplicado por CLI y el `running-config` resultante.
+Las siguientes capturas muestran el bloque de interfaces aplicado en SW-Z5-A1 y el `running-config` resultante.
 
 ![Configuración por CLI en SW-Z5-A1](evidencias/capturas/04_config_por_cli_SW-Z5-A1.png)
 
@@ -66,7 +68,7 @@ Las zonas se distinguen por color y rótulos con VLAN, subred, criticidad y rol 
 
 ### VTP
 
-Los cinco principales están en modo Server y los secundarios en Client. Todos tienen el dominio `202300476`, la versión 2, 12 VLANs y la misma revisión (160).
+Se verificó que los cinco principales estuvieran en modo Server y los secundarios en modo Client. Las capturas muestran el dominio `202300476`, la versión 2, 12 VLANs y la revisión 160 en todos los equipos revisados.
 
 ![VTP servidor SW-Z1-P](evidencias/capturas/10_vtp_servidor_SW-Z1-P.png)
 
@@ -78,7 +80,7 @@ Los cinco principales están en modo Server y los secundarios en Client. Todos t
 
 ### VLANs y Blackhole
 
-En SW-Z1-P, la VLAN 16 tiene Fa0/10 y Fa0/11, y el resto de puertos de acceso está en la VLAN 999. En SW-Z1-A1, los puertos sin uso aparecen como `UNUSED_BLACKHOLE`, `disabled`, en la VLAN 999. En total hay 204 puertos libres, todos en VLAN 999 y apagados.
+En SW-Z1-P, los puertos Fa0/10 y Fa0/11 están asignados a la VLAN 16; los puertos de acceso no utilizados pertenecen a la VLAN 999. En SW-Z1-A1, los puertos sin uso muestran la descripción `UNUSED_BLACKHOLE` y el estado `disabled`. En toda la red se verificaron 204 puertos sin utilizar, asignados a la VLAN 999 y deshabilitados.
 
 ![show vlan brief SW-Z1-P](evidencias/capturas/20_vlan_brief_SW-Z1-P.png)
 
@@ -88,7 +90,7 @@ En SW-Z1-P, la VLAN 16 tiene Fa0/10 y Fa0/11, y el resto de puertos de acceso es
 
 ### Trunks
 
-Ningún trunk permite `all` y todos usan la VLAN nativa 99. El triángulo Z1–Z2–Z4 lleva `1,16,46,99`, y los ramales y los accesos llevan solo la VLAN de su zona: `1,X6,99`.
+Todos los trunks utilizan la VLAN nativa 99 y listas explícitas de VLANs permitidas. El triángulo Z1-Z2-Z4 transporta `1,16,46,99`. Los ramales y enlaces de acceso transportan la VLAN de su zona, además de la 1 y la 99.
 
 ![Trunks SW-Z1-P](evidencias/capturas/30_trunks_SW-Z1-P.png)
 
@@ -102,9 +104,9 @@ Ningún trunk permite `all` y todos usan la VLAN nativa 99. El triángulo Z1–Z
 
 ![Trunks SW-Z5-P](evidencias/capturas/35_trunks_SW-Z5-P.png)
 
-### Rapid PVST+ y root bridge
+### Rapid PVST+ y puente raíz
 
-Cada principal muestra `This bridge is the root` para su VLAN, con prioridad 4096 más el ID de la VLAN (4112, 4122, 4132, 4142 y 4152). En SW-Z1-A1, Gi0/1 es Root FWD y Gi0/2, el respaldo hacia Z4, está en Altn BLK.
+Cada switch principal muestra `This bridge is the root` para la VLAN de su zona. La prioridad mostrada corresponde a 4096 más el ID de la VLAN: 4112, 4122, 4132, 4142 y 4152. En SW-Z1-A1, Gi0/1 aparece como `Root FWD` y Gi0/2, que proporciona el respaldo hacia Z4, como `Altn BLK`.
 
 ![Root VLAN 16](evidencias/capturas/40_stp_root_vlan16_SW-Z1-P.png)
 
@@ -140,7 +142,9 @@ Se registró la salida de `show ip route` de SW-Z1-P como parte de las verificac
 
 ### Pings desde los PCs
 
-Se hicieron 10 pings dentro de la VLAN (2 por zona), todos con 4/4, y 6 pings hacia otra VLAN, todos con 0/4. Ocho de los pings dentro de la VLAN cruzan el trunk entre el principal y el secundario. Los otros dos son entre PCs del mismo switch: PC-Z2-04 → 10.76.0.130 (ambos en SW-Z2-P) y PC-Z3-05 → 10.76.0.167 (ambos en SW-Z3-A1).
+Se realizaron diez pruebas de ping dentro de la misma VLAN, dos por zona, y seis hacia otras VLANs. Las primeras recibieron cuatro respuestas de cuatro intentos (4/4); las segundas no recibieron respuestas (0/4).
+
+Ocho de las pruebas internas atravesaron el trunk entre el switch principal y el secundario. Las otras dos se realizaron entre PCs del mismo switch: PC-Z2-04 → 10.76.0.130, en SW-Z2-P, y PC-Z3-05 → 10.76.0.167, en SW-Z3-A1.
 
 | Origen | Misma VLAN (4/4) | Otra VLAN (0/4) |
 |---|---|---|
@@ -164,16 +168,16 @@ Se hicieron 10 pings dentro de la VLAN (2 por zona), todos con 4/4, y 6 pings ha
 
 ![Cuatro Command Prompt a la vez](evidencias/capturas/66_pings_cuatro_zonas_en_paralelo.png)
 
-Los resultados de los pings se contrastan con las asignaciones de puertos y las listas de VLANs permitidas en los trunks para verificar la segmentación.
+Los resultados se contrastaron con las asignaciones de puertos y las listas de VLANs permitidas en los trunks para verificar la segmentación.
 
 ### Simulación de ARP e ICMP
 
-En modo Simulation, con los filtros en ARP e ICMP, PC-Z3-05 hizo ping a 10.76.0.164 (PC-Z3-03), una IP que no estaba en su caché ARP.
+En modo Simulation se activaron los filtros ARP e ICMP y se ejecutó un ping desde PC-Z3-05 hacia 10.76.0.164 (PC-Z3-03). La dirección de destino no estaba en la caché ARP del equipo de origen.
 
-- SW-Z3-A1 recibe el broadcast ARP por Fa0/4 y lo reenvía solo por los puertos de la VLAN 36: Fa0/2, Fa0/3, Fa0/5 y Gi0/1.
-- SW-Z3-P lo reenvía por sus tres puertos de la VLAN 36 en forwarding: Fa0/10, Fa0/11 y Gi0/1 hacia SW-Z2-P. En la lista de eventos, la columna *Last Device* lo muestra.
-- Ningún evento viene de SW-Z2-P, así que el broadcast se queda en el núcleo: sus otros trunks no llevan la VLAN 36.
-- Después de la respuesta ARP, el Echo Request y el Echo Reply completan el ciclo.
+- SW-Z3-A1 recibió la solicitud ARP de broadcast por Fa0/4 y la reenvió por los demás puertos de la VLAN 36: Fa0/2, Fa0/3, Fa0/5 y Gi0/1.
+- SW-Z3-P la reenvió por sus tres puertos de la VLAN 36 en estado de reenvío: Fa0/10, Fa0/11 y Gi0/1, este último hacia SW-Z2-P. El recorrido se observa en la columna *Last Device* de la lista de eventos.
+- No se observaron reenvíos desde SW-Z2-P hacia otras zonas, ya que sus demás trunks no permiten la VLAN 36.
+- Tras la respuesta ARP, se completó el intercambio de mensajes ICMP Echo Request y Echo Reply.
 
 ![ARP en curso](evidencias/capturas/70_simulacion_arp_en_curso_Z3.png)
 
@@ -183,12 +187,12 @@ En modo Simulation, con los filtros en ARP e ICMP, PC-Z3-05 hizo ping a 10.76.0.
 
 ### Pruebas de fallo
 
-1. Se apagó `Gi0/1` de SW-Z1-P, que es un miembro de Po1. El canal siguió en `Po1(SU)`, con `Gig0/1(D)` y `Gig0/2(P)`.
-2. Con ese miembro todavía caído, se apagó `Fa0/1`, el uplink de SW-Z1-A1. SW-Z1-A1 tomó Gi0/2 como Root FWD (costo 23), es decir, el camino Z1-A1 → Z4-P → Po1 → Z1-P.
-3. PC-Z1-04 hizo ping a 10.76.0.3 y 10.76.0.7, conectados a SW-Z1-A1. Los dos respondieron 4/4 por el camino de respaldo.
-4. Se restauró con `no shutdown`: Po1 volvió a tener los dos miembros en `(P)` y los trunks quedaron igual que antes.
+1. Se deshabilitó `Gi0/1` de SW-Z1-P, uno de los miembros de Po1. El canal mantuvo el estado `Po1(SU)`, con `Gig0/1(D)` y `Gig0/2(P)`.
+2. Con ese miembro aún deshabilitado, se desactivó `Fa0/1` de SW-Z1-P, que conecta con SW-Z1-A1. En el secundario, Gi0/2 pasó a `Root FWD`, con costo 23. El camino de respaldo fue Z1-A1 → Z4-P → Po1 → Z1-P.
+3. Desde PC-Z1-04 se ejecutaron pings hacia 10.76.0.3 y 10.76.0.7, direcciones de PCs conectados a SW-Z1-A1. Ambas pruebas recibieron cuatro respuestas de cuatro por el camino de respaldo.
+4. Se restablecieron las interfaces con `no shutdown`. Los dos miembros de Po1 volvieron al estado `(P)` y los trunks recuperaron su estado inicial.
 
-También se apagaron Po1 y los uplinks de acceso de Z1 y Z4 al mismo tiempo. Las VLANs 16 y 46 siguieron respondiendo 4/4 a través de SW-Z2-P.
+En una prueba adicional se deshabilitaron simultáneamente Po1 y los enlaces ascendentes de acceso de Z1 y Z4. Los pings dentro de las VLANs 16 y 46 mantuvieron cuatro respuestas de cuatro a través de SW-Z2-P.
 
 ![Fallo de un miembro de Po1](evidencias/capturas/80_fallo_miembro_po1_SW-Z1-P.png)
 
@@ -210,8 +214,8 @@ También se apagaron Po1 y los uplinks de acceso de Z1 y Z4 al mismo tiempo. Las
 | Pérdidas de pings y BPDUs reenviados al quitar VLAN 1 de los trunks | En modo Simulation se vio que los 3560 no entregaban esos BPDUs al proceso STP. Permitir VLAN 1 en los trunks, con la 99 como nativa, eliminó el fallo |
 | Miembros de LACP suspendidos o independientes | Los miembros y Po1 tenían parámetros de trunk distintos. Se igualaron y los dos quedaron `(P)` |
 | Al abrir el archivo, los switches aparecían en VTP v1 | Se volvió a aplicar `vtp version 2` en los servidores y se guardó; la versión 2 se mantiene |
-| La revisión VTP sube al abrir el archivo | Es normal en Packet Tracer; lo importante es que coincida en los diez switches |
-| Puertos de PC en LRN y pings perdidos justo después de abrir | La red aún no había convergido. Con Fast Forward Time converge y los pings responden 4/4 |
+| La revisión VTP aumentaba al abrir el archivo | Se comprobó que la revisión coincidiera en los diez switches |
+| Puertos de PC en LRN y pérdida de respuestas al abrir el archivo | La red aún no había convergido. Se utilizó Fast Forward Time y se repitieron los pings, con resultados de 4/4 |
 | `terminal length 0` no existe en esta imagen IOS | Las salidas largas se recorren página por página con `--More--` |
 | `show lacp neighbor` no está implementado | El estado del canal se comprueba con `show etherchannel summary` |
 
@@ -228,4 +232,4 @@ También se apagaron Po1 y los uplinks de acceso de Z1 y Z4 al mismo tiempo. Las
 | Presentación | Zonas identificadas, leyenda y nombres consistentes |
 | Comprensión teórico-práctica | Simulación ARP/ICMP en modo Simulation |
 
-Las salidas `show` y el `running-config` de los diez switches están en [`evidencias/salidas_switches/`](evidencias/salidas_switches/). Para revisar en vivo, abrir el `.pkt`, esperar a que converja (o pulsar Fast Forward Time) y repetir los comandos y pings.
+Las salidas `show` y el `running-config` de los diez switches se encuentran en [`evidencias/salidas_switches/`](evidencias/salidas_switches/). Para repetir la verificación, abrir el archivo `.pkt`, esperar a que la red converja o utilizar Fast Forward Time y ejecutar los comandos y pings descritos en este informe.
