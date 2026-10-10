@@ -21,10 +21,6 @@ Red de capa 2 con **30 PCs y 10 switches** distribuidos en cinco zonas. Cada zon
 
 Hay **seis PCs reales por zona**. Las cantidades 60/28/12/50/7 son la demanda proyectada y se usan para calcular las subredes con VLSM. El modelo compacto permite leer la topología y demostrar todos los protocolos sin instalar los 157 hosts.
 
-## Conectividad de capa 2
-
-Según la aclaración del auxiliar en el foro del curso, no se implementa capa 3. Los pings dentro de una VLAN responden y los pings entre VLANs distintas fallan. Los gateways de los hosts son direcciones reservadas, sin un router o SVI que los atienda.
-
 ## Revisión rápida
 
 Abrir el proyecto en Packet Tracer y esperar a que converja (o pulsar Fast Forward Time). Consola de los switches: `Cayala476Con`; enable: `Cayala476Enable`. Comprobar `show vlan brief`, `show vtp status`, `show interfaces trunk`, `show spanning-tree vlan 16` y `show etherchannel summary`. El canal debe indicar `Po1(SU)`, `LACP` y dos miembros `(P)`.
