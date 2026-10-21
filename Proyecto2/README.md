@@ -1112,3 +1112,28 @@ Los tres Port-channel aparecen como `SU` (capa 2, en uso), con protocolo LACP y 
 | Tabla de rutas de R-Central2 (estáticas y ruta por defecto) | [17_rcentral2_show_ip_route.png](docs/img/evidencias/17_rcentral2_show_ip_route.png) |
 
 ---
+
+## 12. Configuración común a todos los equipos
+
+Todos los routers y switches recibieron la misma base:
+
+```
+hostname <nombre>
+no ip domain-lookup
+banner motd #BanTech GT - Acceso restringido. Solo personal autorizado.#
+line console 0
+ logging synchronous
+spanning-tree mode rapid-pvst        ! en todos los switches
+```
+
+Además:
+
+- cada interfaz en uso tiene `description` con el equipo del otro extremo;
+- los puertos de hosts tienen `spanning-tree portfast`;
+- la configuración se guardó con `write memory`, como se comprobó al reencender MS1 en la prueba 15.2.
+
+Los scripts completos de configuración por equipo están en [`docs/scripts/`](docs/scripts/). Las
+configuraciones en ejecución, exportadas con `show running-config`, están en
+[`docs/evidencias/running-config/`](docs/evidencias/running-config/).
+
+---
