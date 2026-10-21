@@ -964,3 +964,151 @@ router ospf 1
 | MS1 como Root Bridge de la VLAN 82 | [44_ms1_root_bridge.png](docs/img/evidencias/44_ms1_root_bridge.png) |
 
 ---
+
+## 11. Data Center y Sede Central
+
+### 11.1 Topología
+
+```
+   CORE-2 ── Gi0/0 ┐                         ┌ Gi0/0/0 ── fibra ── CORE-3
+                   R-Central1  (★ estáticas → OSPF)
+                        │ Gi0/1 · 10.76.0.36/30
+                   R-Central2  (router de acceso · default → R-Central1)
+                        │ Gi0/1 · 10.76.0.40/30
+                   SW-DC-DIST  (3560 · SVIs 13/23/33 · default → R-Central2)
+          Po1 ╱ (Fa0/1-2)  │ Po2 (Fa0/3-4)  ╲ Po3 (Fa0/5-6)
+       SW-DC-ACC1      SW-DC-ACC2         SW-DC-ACC3
+       Core_BD         Web_Apps           NOC
+```
+
+### 11.2 Mapeo lógico
+
+| Equipo | Rol | Troncales 802.1Q | Puertos de acceso / L3 |
+|---|---|---|---|
+| R-Central1 | Punto de redistribución | — | Gi0/0 → CORE-2, Gi0/0/0 (fibra) → CORE-3, Gi0/1 → R-Central2 |
+| R-Central2 | Router de acceso del segmento estático | — | Gi0/0 → R-Central1, Gi0/1 → SW-DC-DIST |
+| **SW-DC-DIST** | **Switch de distribución** (capa 3) | Po1 (Fa0/1–2), Po2 (Fa0/3–4), Po3 (Fa0/5–6) | Gi0/1 routed → R-Central2; SVIs 13, 23 y 33 |
+| SW-DC-ACC1 | Acceso a servidores Core_BD | Po1 (Fa0/23–24) | Fa0/1–7 VLAN 13 |
+| SW-DC-ACC2 | Acceso a servidores Web_Apps | Po2 (Fa0/23–24) | Fa0/1–7 VLAN 23 |
+| SW-DC-ACC3 | Acceso al NOC | Po3 (Fa0/23–24) | Fa0/1–7 VLAN 33 |
+
+### 11.3 Justificación de la arquitectura
+
+**Topología física.** Se siguió la estructura que describe el enunciado: dos routers de borde con
+funciones distintas y, detrás de ellos, una **distribución de capa 3 con tres switches de acceso**, uno
+por granja. Cada granja tiene su propio switch, así que una ráfaga en los servidores web no compite por
+los mismos puertos que la base de datos.
+
+**EtherChannel.** Cada switch de acceso se conecta a la distribución con un **EtherChannel LACP de 2
+cables** (`channel-group N mode active` en ambos extremos). Con LACP activo en los dos lados el canal
+se negocia, no se fuerza, así que un error de cableado deja el puerto suspendido en lugar de crear un
+bucle. El resultado:
+
+- **Ancho de banda sumado:** 2 × 100 Mbps por granja. Responde a la necesidad de que *"un solo cable no
+  tiene el ancho de banda suficiente"*.
+- **Tolerancia a fallos:** si se corta un cable, el canal sigue arriba con el otro, sin reconvergencia de
+  STP, porque STP ve el Port-channel como un solo enlace lógico.
+
+**Rutas estáticas y aislamiento.** El segmento no corre ningún protocolo dinámico:
+
+- SW-DC-DIST tiene una ruta por defecto hacia R-Central2.
+- R-Central2 conoce las tres VLANs por SW-DC-DIST y usa una ruta por defecto hacia R-Central1.
+- R-Central1 tiene estáticas hacia las VLANs y las **redistribuye en OSPF**.
+
+Ningún equipo del núcleo puede inyectar rutas dentro del Data Center, y el Data Center solo publica lo
+que R-Central1 decide publicar. Además, R-Central1 tiene doble conexión al núcleo (Ethernet a CORE-2 y
+fibra a CORE-3), así que el Data Center sigue alcanzable si cae uno de los dos.
+
+**Inter-VLAN.** Se hace con **SVIs en SW-DC-DIST**, que enruta en hardware entre las tres VLANs sin
+depender de un router externo. El tráfico entre la base de datos y los servidores web no sale de la
+distribución.
+
+### 11.4 Extractos de configuración
+
+**SW-DC-DIST: SVIs, EtherChannel y ruta por defecto**
+
+```
+ip routing
+vlan 13
+ name Core_BD
+vlan 23
+ name Web_Apps
+vlan 33
+ name NOC
+interface range FastEthernet0/1 - 2
+ description EtherChannel LACP hacia SW-DC-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+interface range FastEthernet0/3 - 4
+ description EtherChannel LACP hacia SW-DC-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 2 mode active
+interface range FastEthernet0/5 - 6
+ description EtherChannel LACP hacia SW-DC-ACC3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 3 mode active
+interface GigabitEthernet0/1
+ description Enlace hacia R-Central2
+ no switchport
+ ip address 10.76.0.42 255.255.255.252
+interface Vlan13
+ description Gateway Core_BD
+ ip address 10.76.40.33 255.255.255.224
+interface Vlan23
+ description Gateway Web_Apps
+ ip address 10.76.40.1 255.255.255.224
+interface Vlan33
+ description Gateway NOC
+ ip address 10.76.40.65 255.255.255.240
+ip route 0.0.0.0 0.0.0.0 10.76.0.41
+```
+
+**SW-DC-ACC1: extremo del EtherChannel**
+
+```
+interface range FastEthernet0/23 - 24
+ description EtherChannel LACP hacia SW-DC-DIST
+ switchport mode trunk
+ channel-group 1 mode active
+interface range FastEthernet0/1 - 7
+ description Hosts VLAN 13 Core_BD
+ switchport mode access
+ switchport access vlan 13
+ spanning-tree portfast
+```
+
+**R-Central2: rutas estáticas del segmento**
+
+```
+interface GigabitEthernet0/0
+ description Enlace hacia R-Central1
+ ip address 10.76.0.38 255.255.255.252
+interface GigabitEthernet0/1
+ description Enlace hacia SW-DC-DIST
+ ip address 10.76.0.41 255.255.255.252
+ip route 0.0.0.0 0.0.0.0 10.76.0.37
+ip route 10.76.40.0  255.255.255.224 10.76.0.42
+ip route 10.76.40.32 255.255.255.224 10.76.0.42
+ip route 10.76.40.64 255.255.255.240 10.76.0.42
+```
+
+La configuración de redistribución de R-Central1 está en la sección [5.5](#55-puntos-de-redistribución).
+
+### 11.5 Evidencias de la sede
+
+![EtherChannel en SW-DC-DIST](docs/img/evidencias/50_swdcdist_etherchannel.png)
+
+Los tres Port-channel aparecen como `SU` (capa 2, en uso), con protocolo LACP y sus dos puertos en
+`P` (agregados al canal).
+
+| Evidencia adicional | Captura |
+|---|---|
+| VLANs con nombre y SVIs activas | [51_swdcdist_vlans_svis.png](docs/img/evidencias/51_swdcdist_vlans_svis.png) |
+| Troncales sobre los Port-channel | [52_swdcdist_trunks.png](docs/img/evidencias/52_swdcdist_trunks.png) |
+| Redistribución de estáticas en R-Central1 (`show ip protocols`) | [16_rcentral1_show_ip_protocols.png](docs/img/evidencias/16_rcentral1_show_ip_protocols.png) |
+| Tabla de rutas de R-Central2 (estáticas y ruta por defecto) | [17_rcentral2_show_ip_route.png](docs/img/evidencias/17_rcentral2_show_ip_route.png) |
+
+---
