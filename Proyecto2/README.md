@@ -687,3 +687,144 @@ interface GigabitEthernet0/1
 ![VLANs en el cliente](docs/img/evidencias/24_swoccacc2_vlan_brief.png)
 
 ---
+
+## 9. Sede Norte — Centro de Autorización de Créditos
+
+### 9.1 Topología
+
+```
+                 CORE-3 (Se0/1/0, DCE)
+                    │  10.76.0.32/30 · serial WAN · EIGRP 100
+                 R-Norte  Gi0/0 ── subinterfaces .52 .62 .72
+                    │  troncal 802.1Q
+              SW-NOR-DIST  ★ Root Bridge (4096)
+              Gi0/1 ╱      ╲ Gi0/2
+                   ╱        ╲
+        SW-NOR-ACC1 ──────── SW-NOR-ACC2
+        (8192)     Gi0/2  Gi0/2   (32768)
+                       └─ Altn BLK en ACC2 Gi0/2
+```
+
+### 9.2 Mapeo lógico
+
+| Equipo | Rol | Troncales 802.1Q | Puertos de acceso |
+|---|---|---|---|
+| R-Norte | Router de borde, Router-on-a-Stick | Gi0/0 (subinterfaces 52, 62 y 72) | — |
+| **SW-NOR-DIST** | **Switch principal**, **Root Bridge** de las VLANs 52, 62 y 72 | Fa0/24 → R-Norte, Gi0/1 → ACC1, Gi0/2 → ACC2 | — |
+| SW-NOR-ACC1 | Acceso, root secundario (8192) | Gi0/1 → DIST, Gi0/2 → ACC2 (cierre del anillo) | Fa0/1–7 VLAN 52 Análisis; Fa0/8–11 VLAN 72 Legal |
+| SW-NOR-ACC2 | Acceso | Gi0/1 → DIST, Gi0/2 → ACC1 (cierre del anillo) | Fa0/1–7 VLAN 62 Auditoría; Fa0/8–10 VLAN 72 Legal |
+
+### 9.3 Justificación de la arquitectura
+
+**Topología física.** Se eligió un **triángulo de switches**: el switch principal se conecta a los dos
+switches de acceso, y estos se conectan entre sí. Ese tercer enlace crea el **bucle físico
+intencional** que pide el enunciado. Con él, cada switch de analistas tiene **dos caminos físicos
+distintos** hacia el switch principal: el directo y el que pasa por el otro switch de acceso. Así
+desaparece el único punto de falla físico entre los analistas y el switch principal.
+
+**Tolerancia a fallos.** Rapid PVST+ (802.1w por VLAN) bloquea un puerto del triángulo para que no haya
+tormentas de broadcast y lo reactiva en cuanto falla el camino principal. A diferencia del STP clásico,
+RSTP no espera los 30 a 50 segundos de los estados *listening* y *learning*: el puerto alterno pasa a
+*forwarding* casi de inmediato. En la prueba de la sección 15.3 se cortó el enlace DIST–ACC2 durante un
+ping continuo y no se perdió ningún paquete.
+
+**Elección del Root Bridge.** Se forzó **SW-NOR-DIST** como raíz con `spanning-tree vlan 52,62,72
+priority 4096` por tres razones:
+
+1. Es el switch por donde sale todo el tráfico hacia el gateway (R-Norte). Si es la raíz, los dos
+   enlaces DIST–ACC quedan como caminos directos en *forwarding*.
+2. El puerto que se bloquea es el del enlace entre los dos switches de acceso (ACC2 Gi0/2), que solo
+   sirve de respaldo.
+3. Si se dejara la elección por defecto, ganaría el switch con la MAC más baja. Podría ser un switch de
+   acceso, y entonces el tráfico de una sede hacia el router daría una vuelta innecesaria.
+
+ACC1 recibió prioridad **8192** como raíz secundaria, para que el papel de raíz pase a un equipo
+conocido si SW-NOR-DIST falla.
+
+**Respuesta a la necesidad operativa.** La sede no puede quedarse sin red porque se detienen los
+créditos de todo el país. Con el triángulo y RSTP, la caída de cualquier enlace entre switches no deja
+a ningún analista sin conexión.
+
+### 9.4 Extractos de configuración
+
+**R-Norte: Router-on-a-Stick, serial y EIGRP**
+
+```
+interface GigabitEthernet0/0.52
+ description Gateway VLAN 52 Analisis
+ encapsulation dot1Q 52
+ ip address 10.76.20.1 255.255.255.192
+interface GigabitEthernet0/0.62
+ description Gateway VLAN 62 Auditoria
+ encapsulation dot1Q 62
+ ip address 10.76.20.65 255.255.255.224
+interface GigabitEthernet0/0.72
+ description Gateway VLAN 72 Legal
+ encapsulation dot1Q 72
+ ip address 10.76.20.97 255.255.255.224
+interface Serial0/0/0
+ description WAN serial EIGRP hacia CORE-3
+ ip address 10.76.0.34 255.255.255.252
+!
+router eigrp 100
+ passive-interface GigabitEthernet0/0.52
+ passive-interface GigabitEthernet0/0.62
+ passive-interface GigabitEthernet0/0.72
+ network 10.76.0.32 0.0.0.3
+ network 10.76.20.0 0.0.0.255
+```
+
+**SW-NOR-DIST: Root Bridge forzado**
+
+```
+vlan 52
+ name Analisis
+vlan 62
+ name Auditoria
+vlan 72
+ name Legal
+spanning-tree mode rapid-pvst
+spanning-tree vlan 52,62,72 priority 4096
+interface FastEthernet0/24
+ description Troncal hacia R-Norte (router-on-a-stick)
+ switchport mode trunk
+interface GigabitEthernet0/1
+ description Anillo: troncal hacia SW-NOR-ACC1
+ switchport mode trunk
+interface GigabitEthernet0/2
+ description Anillo: troncal hacia SW-NOR-ACC2
+ switchport mode trunk
+```
+
+**SW-NOR-ACC1: root secundario y cierre del anillo**
+
+```
+spanning-tree mode rapid-pvst
+spanning-tree vlan 52,62,72 priority 8192
+interface GigabitEthernet0/1
+ description Anillo: troncal hacia SW-NOR-DIST
+ switchport mode trunk
+interface GigabitEthernet0/2
+ description Anillo: troncal hacia SW-NOR-ACC2
+ switchport mode trunk
+```
+
+### 9.5 Evidencias de la sede
+
+![Root Bridge en SW-NOR-DIST](docs/img/evidencias/33_swnordist_root_bridge.png)
+
+En SW-NOR-DIST, `show spanning-tree vlan 52` muestra *"This bridge is the root"* con prioridad 4148
+(4096 + 52), y sus tres puertos están en `Desg FWD`.
+
+![Puerto bloqueado en SW-NOR-ACC2](docs/img/evidencias/34_swnoracc2_puerto_bloqueado.png)
+
+En SW-NOR-ACC2, Gi0/1 es el puerto raíz (`Root FWD`) y Gi0/2, el enlace hacia ACC1, está en
+**`Altn BLK`**. Es el puerto que RSTP mantiene bloqueado para romper el bucle.
+
+| Evidencia adicional | Captura |
+|---|---|
+| Subinterfaces de R-Norte y vecino EIGRP por Serial0/0/0 | [30_rnorte_subinterfaces_eigrp.png](docs/img/evidencias/30_rnorte_subinterfaces_eigrp.png) |
+| VLANs con nombre en SW-NOR-DIST | [32_swnordist_vlan_brief.png](docs/img/evidencias/32_swnordist_vlan_brief.png) |
+| Troncales del switch principal | [35_swnordist_trunks.png](docs/img/evidencias/35_swnordist_trunks.png) |
+
+---
