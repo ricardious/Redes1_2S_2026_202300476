@@ -515,3 +515,26 @@ primera es el gateway).
 </details>
 
 ---
+
+## 7. Tabla de VLANs
+
+Cada VLAN tiene su nombre configurado con `name`, como pide la *nomenclatura estricta* del enunciado.
+Los nombres se escribieron sin tildes (por ejemplo, `Analisis`) para evitar problemas de codificación en
+la CLI.
+
+| ID | Nombre | Sede | Red | Gateway | Inter-VLAN en | Switches donde existe |
+|---:|---|---|---|---|---|---|
+| 12 | Cajas | Occidente | 10.76.10.0/26 | 10.76.10.1 | R-Occidente Gi0/1.12 | SW-OCC-DIST (servidor VTP), ACC1 y ACC2 (aprendida por VTP) |
+| 22 | Asesores | Occidente | 10.76.10.64/26 | 10.76.10.65 | R-Occidente Gi0/1.22 | ídem |
+| 32 | Gerencia | Occidente | 10.76.10.144/28 | 10.76.10.145 | R-Occidente Gi0/1.32 | ídem |
+| 42 | Seguridad | Occidente | 10.76.10.128/28 | 10.76.10.129 | R-Occidente Gi0/1.42 | ídem |
+| 52 | Analisis | Norte | 10.76.20.0/26 | 10.76.20.1 | R-Norte Gi0/0.52 | SW-NOR-DIST, ACC1 y ACC2 |
+| 62 | Auditoria | Norte | 10.76.20.64/27 | 10.76.20.65 | R-Norte Gi0/0.62 | ídem |
+| 72 | Legal | Norte | 10.76.20.96/27 | 10.76.20.97 | R-Norte Gi0/0.72 | ídem |
+| 82 | Boveda | Oriente | 10.76.30.128/26 | 10.76.30.129 (VIP) | SVI Vlan82 en MS1 y MS2 | MS1, MS2, SW-ORI-ACC1 y ACC2 |
+| 92 | Plataforma | Oriente | 10.76.30.0/25 | 10.76.30.1 (VIP) | SVI Vlan92 en MS1 y MS2 | ídem |
+| 13 | Core_BD | Data Center | 10.76.40.32/27 | 10.76.40.33 | SVI Vlan13 en SW-DC-DIST | SW-DC-DIST y los tres switches de acceso |
+| 23 | Web_Apps | Data Center | 10.76.40.0/27 | 10.76.40.1 | SVI Vlan23 en SW-DC-DIST | ídem |
+| 33 | NOC | Data Center | 10.76.40.64/28 | 10.76.40.65 | SVI Vlan33 en SW-DC-DIST | ídem |
+
+---
