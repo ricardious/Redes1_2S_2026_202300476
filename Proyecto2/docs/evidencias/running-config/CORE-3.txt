@@ -1,0 +1,85 @@
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname CORE-3
+!
+no ip cef
+no ipv6 cef
+!
+license udi pid CISCO2911/K9 sn FTX15248417-
+!
+no ip domain-lookup
+!
+spanning-tree mode pvst
+!
+interface GigabitEthernet0/0
+ description Enlace a CORE-1
+ ip address 10.76.0.6 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ description Enlace a CORE-2
+ ip address 10.76.0.10 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface GigabitEthernet0/0/0
+ description Fibra optica hacia R-Central1
+ ip address 10.76.0.29 255.255.255.252
+!
+interface Serial0/1/0
+ description WAN serial EIGRP hacia R-Norte
+ ip address 10.76.0.33 255.255.255.252
+ clock rate 2000000
+!
+interface Serial0/1/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router eigrp 100
+ redistribute ospf 1 metric 1544 20000 255 1 1500 
+ network 10.76.0.32 0.0.0.3
+!
+router ospf 1
+ router-id 3.3.3.3
+ log-adjacency-changes
+ redistribute eigrp 100 subnets 
+ passive-interface Serial0/1/0
+ network 10.76.0.4 0.0.0.3 area 0
+ network 10.76.0.8 0.0.0.3 area 0
+ network 10.76.0.28 0.0.0.3 area 0
+ network 10.76.0.32 0.0.0.3 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+banner motd ^CBanTech GT - Acceso restringido. Solo personal autorizado.^C
+!
+line con 0
+ logging synchronous
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+end
+
+
+

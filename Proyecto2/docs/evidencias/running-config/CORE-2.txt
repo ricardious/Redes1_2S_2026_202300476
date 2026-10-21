@@ -1,0 +1,130 @@
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname CORE-2
+!
+no profinet
+!
+ip routing
+!
+no ip domain-lookup
+!
+spanning-tree mode rapid-pvst
+!
+interface Port-channel1
+ description EtherChannel L3 LACP hacia CORE-1
+ no switchport
+ ip address 10.76.0.2 255.255.255.252
+!
+interface FastEthernet0/1
+ description Enlace a CORE-3
+ no switchport
+ ip address 10.76.0.9 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/2
+ description Enlace OSPF hacia R-Central1
+ no switchport
+ ip address 10.76.0.25 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/3
+ description Enlace OSPF hacia MS2 Oriente
+ no switchport
+ ip address 10.76.0.21 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ description Po1 EtherChannel L3 hacia CORE-1
+ no switchport
+ no ip address
+ channel-group 1 mode active
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+ description Po1 EtherChannel L3 hacia CORE-1
+ no switchport
+ no ip address
+ channel-group 1 mode active
+ duplex auto
+ speed auto
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 2.2.2.2
+ log-adjacency-changes
+ network 10.76.0.0 0.0.0.3 area 0
+ network 10.76.0.8 0.0.0.3 area 0
+ network 10.76.0.20 0.0.0.3 area 0
+ network 10.76.0.24 0.0.0.3 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+banner motd ^CBanTech GT - Acceso restringido. Solo personal autorizado.^C
+!
+line con 0
+ logging synchronous
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+end
+
+
+
