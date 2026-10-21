@@ -828,3 +828,139 @@ En SW-NOR-ACC2, Gi0/1 es el puerto raíz (`Root FWD`) y Gi0/2, el enlace hacia A
 | Troncales del switch principal | [35_swnordist_trunks.png](docs/img/evidencias/35_swnordist_trunks.png) |
 
 ---
+
+## 10. Sede Oriente — Centro Financiero Legado
+
+### 10.1 Topología
+
+```
+            CORE-1                         CORE-2
+              │ 10.76.0.16/30                │ 10.76.0.20/30
+             MS1 ════ Po1 LACP (Fa0/23-24) ═══ MS2
+   HSRP activo (105, track Gi0/1)     HSRP standby (100)
+   Root VLAN 82/92 (4096)             STP 8192
+          Fa0/1 │  ╲ Fa0/2      Fa0/1 ╱  │ Fa0/2
+                │    ╲              ╱    │
+                │      ╲          ╱      │
+           SW-ORI-ACC1  ╲      ╱   SW-ORI-ACC2
+           (Bóveda)      ╲  ╱       (Plataforma)
+              Gi0/1 → MS1  ╳  Gi0/2 → MS2 en cada acceso
+```
+
+Cada switch de acceso tiene **un troncal a MS1 (Gi0/1) y otro a MS2 (Gi0/2)**. Esa es la conexión
+simultánea a MS1 y MS2 que pide el enunciado.
+
+### 10.2 Mapeo lógico
+
+| Equipo | Rol | Troncales 802.1Q | Puertos de acceso / L3 |
+|---|---|---|---|
+| **MS1** | **Distribución principal**, HSRP activo, Root Bridge | Po1 (Fa0/23–24) → MS2, Fa0/1 → ACC1, Fa0/2 → ACC2 | Gi0/1 enlace routed a CORE-1; SVIs Vlan82 y Vlan92 |
+| MS2 | Distribución de respaldo, HSRP standby | Po1 (Fa0/23–24) → MS1, Fa0/1 → ACC1, Fa0/2 → ACC2 | Gi0/1 enlace routed a CORE-2; SVIs Vlan82 y Vlan92 |
+| SW-ORI-ACC1 | Acceso | Gi0/1 → MS1, Gi0/2 → MS2 | Fa0/1–7 VLAN 82 Bóveda |
+| SW-ORI-ACC2 | Acceso | Gi0/1 → MS1, Gi0/2 → MS2 | Fa0/1–7 VLAN 92 Plataforma |
+
+### 10.3 Justificación de la arquitectura
+
+**Topología física.** MS1 y MS2 están **en cascada**, unidos por un EtherChannel LACP de dos enlaces, y
+cada switch de acceso tiene **doble conexión**, una a cada multicapa. Así ningún usuario depende de un
+solo equipo de distribución ni de un solo cable. Además, cada multicapa sube a un equipo distinto del
+núcleo, por lo que la sede tampoco depende de un solo equipo del backbone.
+
+**HSRP en estas VLANs.** Las VLANs 82 (Bóveda) y 92 (Plataforma VIP) son las críticas de la sede:
+operaciones de valores y atención a clientes VIP. El requerimiento dice que no pueden perder el gateway
+*"incluso si MS1 sufre un corte de energía"*. Se eligió **HSRP** en lugar de VRRP porque es el protocolo
+nativo de Cisco, funciona completo en los Catalyst 3560 de Packet Tracer y permite `track` de interfaz.
+Se usó la **versión 2**, que admite números de grupo mayores a 255 y usa la dirección multicast
+224.0.0.102. Por claridad, el número de grupo coincide con el ID de VLAN (grupo 82 y grupo 92).
+
+| Parámetro | MS1 | MS2 | Para qué sirve |
+|---|---|---|---|
+| Prioridad | **105** | 100 (por defecto) | MS1 es el activo en condiciones normales |
+| `preempt` | Sí | Sí | MS1 recupera el rol activo cuando vuelve |
+| `track GigabitEthernet0/1` | Sí (decremento 10) | — | Si MS1 pierde su enlace al núcleo, baja a 95 y cede el rol a MS2. Así no queda como gateway sin salida |
+| STP | Root, prioridad 4096 | 8192 | El camino de capa 2 hacia el gateway activo es directo |
+
+**Alineación de STP con HSRP.** MS1 es al mismo tiempo el gateway activo y el Root Bridge de las VLANs
+82 y 92. Si la raíz fuera MS2, el tráfico de los hosts hacia el gateway activo cruzaría primero hasta
+MS2 y luego por el Po1 de vuelta a MS1.
+
+**Respuesta a la necesidad operativa.** En la sección 15.1 se apagó la interfaz de MS1 con un ping
+continuo y el tráfico siguió por MS2 sin perder paquetes. En la sección 15.2 se cortó la energía de MS1
+completo: se perdieron 3 paquetes mientras HSRP y RSTP convergían, y la conexión se restableció sola.
+
+### 10.4 Extractos de configuración
+
+**MS1: SVIs con HSRP, EtherChannel en cascada y OSPF**
+
+```
+ip routing
+spanning-tree mode rapid-pvst
+spanning-tree vlan 82,92 priority 4096
+vlan 82
+ name Boveda
+vlan 92
+ name Plataforma
+interface GigabitEthernet0/1
+ description Enlace OSPF hacia CORE-1
+ no switchport
+ ip address 10.76.0.18 255.255.255.252
+interface range FastEthernet0/23 - 24
+ description Cascada MS1-MS2 EtherChannel LACP
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+interface Vlan82
+ description Gateway Boveda (HSRP grupo 82)
+ ip address 10.76.30.130 255.255.255.192
+ standby version 2
+ standby 82 ip 10.76.30.129
+ standby 82 priority 105
+ standby 82 preempt
+ standby 82 track GigabitEthernet0/1
+interface Vlan92
+ description Gateway Plataforma (HSRP grupo 92)
+ ip address 10.76.30.2 255.255.255.128
+ standby version 2
+ standby 92 ip 10.76.30.1
+ standby 92 priority 105
+ standby 92 preempt
+ standby 92 track GigabitEthernet0/1
+router ospf 1
+ router-id 5.5.5.5
+ network 10.76.0.16 0.0.0.3 area 0
+ network 10.76.30.0 0.0.0.255 area 0
+```
+
+**MS2: respaldo**
+
+```
+spanning-tree vlan 82,92 priority 8192
+interface Vlan82
+ ip address 10.76.30.131 255.255.255.192
+ standby version 2
+ standby 82 ip 10.76.30.129
+ standby 82 preempt
+interface Vlan92
+ ip address 10.76.30.3 255.255.255.128
+ standby version 2
+ standby 92 ip 10.76.30.1
+ standby 92 preempt
+router ospf 1
+ router-id 6.6.6.6
+ network 10.76.0.20 0.0.0.3 area 0
+ network 10.76.30.0 0.0.0.255 area 0
+```
+
+### 10.5 Evidencias de la sede
+
+![HSRP MS1 activo](docs/img/evidencias/40_ms1_standby_brief.png)
+
+![HSRP MS2 standby](docs/img/evidencias/41_ms2_standby_brief.png)
+
+| Evidencia adicional | Captura |
+|---|---|
+| EtherChannel Po1 entre MS1 y MS2 (`SU`, LACP, Fa0/23 y Fa0/24 en `P`) | [42_ms1_etherchannel.png](docs/img/evidencias/42_ms1_etherchannel.png) |
+| Tabla de rutas de MS1 | [43_ms1_show_ip_route.png](docs/img/evidencias/43_ms1_show_ip_route.png) |
+| MS1 como Root Bridge de la VLAN 82 | [44_ms1_root_bridge.png](docs/img/evidencias/44_ms1_root_bridge.png) |
+
+---
