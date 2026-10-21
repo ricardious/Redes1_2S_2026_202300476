@@ -1,0 +1,22 @@
+show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Po1         on           802.1q         trunking      1
+Po2         on           802.1q         trunking      1
+Po3         on           802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Po1         1-1005
+Po2         1-1005
+Po3         1-1005
+
+Port        Vlans allowed and active in management domain
+Po1         1,13,23,33
+Po2         1,13,23,33
+Po3         1,13,23,33
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Po1         1,13,23,33
+Po2         1,13,23,33
+Po3         1,13,23,33
+
+SW-DC-DIST#
