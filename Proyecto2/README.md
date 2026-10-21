@@ -1377,3 +1377,34 @@ Al restaurar el enlace con `no shutdown`, Gi0/1 volvió a ser el puerto raíz y 
 | Rapid PVST+ | `shutdown` en SW-NOR-DIST Gi0/2 | **0 de 60** | Sí: ACC2 Gi0/2 de `Altn BLK` a `Root FWD` |
 
 ---
+
+## 16. Cumplimiento de los requerimientos
+
+| Requerimiento del enunciado | Dónde se cumple |
+|---|---|
+| Núcleo redundante con al menos 3 equipos de capa 3 | CORE-1, CORE-2 y CORE-3 en triángulo (5.1) |
+| Agregación de enlaces en el núcleo | Po1 L3 LACP CORE-1 ↔ CORE-2 (5.1, captura 10) |
+| Dominios OSPF, EIGRP y RIPv2 y segmento estático | 5.3 |
+| Al menos dos puntos de redistribución | Tres: CORE-1, CORE-3 y R-Central1 (5.5) |
+| Medios físicos: fibra, Ethernet y serial | 5.2 |
+| Direccionamiento /30 del backbone propuesto | 6.2 |
+| Inter-VLAN en cada sede | 13.2 (Router-on-a-Stick en Occidente y Norte, SVIs en Oriente y DC) |
+| Occidente: Router-on-a-Stick en R-Occidente | 8.4, captura 20 |
+| Occidente: VTP `bantech76` / `cisco` con más de un switch de acceso | 8.4, capturas 22–24 |
+| Norte: bucle físico intencional | Triángulo DIST–ACC1–ACC2 (9.1) |
+| Norte: Rapid PVST+ y Root Bridge forzado y justificado | 9.3, capturas 33–34 |
+| Oriente: acceso conectado a MS1 y MS2 a la vez | 10.1–10.2 |
+| Oriente: HSRP con MS1 y MS2 como gateways virtuales | 10.3–10.4, capturas 40–41 |
+| Oriente: al apagar la interfaz de MS1, el tráfico sigue por MS2 | 15.1 (0 % de pérdida) |
+| DC: switches de distribución y de acceso para servidores | 11.1–11.2 |
+| DC: EtherChannel de al menos 2 cables en el acceso a servidores | Po1, Po2 y Po3 con LACP (11.3, captura 50) |
+| DC: R-Central2 de acceso y R-Central1 redistribuye hacia el backbone | 11.3, 5.5, capturas 15–17 |
+| VLANs con `name` y todos los equipos con `hostname` | 7, 12 |
+| Mapeo lógico: switch principal, troncales y puertos de acceso | 8.2, 9.2, 10.2, 11.2 |
+| Justificación por sede (topología, tolerancia a fallos, contexto) | 8.3, 9.3, 10.3, 11.3 |
+| Capturas: convergencia, tablas de rutas y conmutación por error | 13, 14, 15 |
+| Mínimo de 7 dispositivos finales por área | 7 por VLAN, 84 en total (4.2) |
+| Área de cada protocolo identificada en el simulador | Zonas de color con encabezado (3.3) |
+| Tablas de subneteo, IPs asignadas y tabla de VLANs | 6 y 7 |
+
+---
