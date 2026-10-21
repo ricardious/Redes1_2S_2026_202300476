@@ -1,0 +1,9 @@
+show interfaces GigabitEthernet0/1 | include line protocol
+GigabitEthernet0/1 is administratively down, line protocol is down (disabled)
+MS1#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State    Active          Standby         Virtual IP
+Vl82        82   95  P Standby  10.76.30.131    local           10.76.30.129   
+Vl92        92   95  P Standby  10.76.30.3      local           10.76.30.1     
+MS1#
