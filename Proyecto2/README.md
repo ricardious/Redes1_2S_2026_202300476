@@ -7,12 +7,15 @@ backbone redundante que une cuatro dominios de enrutamiento (OSPF, EIGRP, RIPv2 
 y cuatro sedes diseñadas desde cero. En las sedes se aplicaron VLANs con VLSM, enrutamiento
 inter-VLAN, VTP, Rapid PVST+, EtherChannel LACP y HSRP.
 
+| Estudiante | Carné | Rol |
+|---|---|---|
+| Alex Ricardo Castañeda Rodríguez | 202300476 | Coordinador |
+| Carlos Javier Pérez Pocón | 202206425 | Integrante |
+
 | | |
 |---|---|
-| **Estudiante** | Alex Ricardo Castañeda Rodríguez |
-| **Carné** | 202300476 |
 | **Curso** | Redes de Computadoras 1 — Segundo Semestre 2026 |
-| **Grupo** | 2 (coordinador) |
+| **Grupo** | 2 |
 | **Ponderación** | 33 pts |
 | **Archivo de topología** | [`packet-tracer/Proyecto2_202300476.pkt`](packet-tracer/Proyecto2_202300476.pkt) |
 | **Versión de Packet Tracer** | 9.0.1 |
