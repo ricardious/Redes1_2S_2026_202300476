@@ -330,3 +330,188 @@ La palabra clave `subnets` es necesaria en OSPF. Sin ella solo se redistribuirí
 completa y se perderían todas las subredes VLSM.
 
 ---
+
+## 6. Direccionamiento IP y subneteo
+
+### 6.1 Plan general
+
+Se tomó el bloque **10.76.0.0/16** (`XX = 76`) y se reservó un /24 por dominio. Así, el segundo y el
+tercer octeto de una dirección indican de inmediato a qué parte de la red pertenece:
+
+| Bloque | Uso |
+|---|---|
+| 10.76.0.0/24 | Backbone: enlaces punto a punto /30 |
+| 10.76.10.0/24 | Sede Occidente |
+| 10.76.20.0/24 | Sede Norte |
+| 10.76.30.0/24 | Sede Oriente |
+| 10.76.40.0/24 | Data Center y Sede Central |
+
+### 6.2 Enlaces punto a punto del backbone (FLSM /30)
+
+Todos los enlaces entre routers usan **/30** (2 hosts útiles), el tamaño exacto para un enlace punto a
+punto. Como todos son del mismo tamaño, se aplicó FLSM dentro de 10.76.0.0/24.
+
+| # | Subred | Extremo A | IP A | Extremo B | IP B | Medio |
+|---:|---|---|---|---|---|---|
+| 1 | 10.76.0.0/30 | CORE-1 Po1 | 10.76.0.1 | CORE-2 Po1 | 10.76.0.2 | EtherChannel L3 LACP |
+| 2 | 10.76.0.4/30 | CORE-1 Fa0/1 | 10.76.0.5 | CORE-3 Gi0/0 | 10.76.0.6 | Ethernet |
+| 3 | 10.76.0.8/30 | CORE-2 Fa0/1 | 10.76.0.9 | CORE-3 Gi0/1 | 10.76.0.10 | Ethernet |
+| 4 | 10.76.0.12/30 | CORE-1 Fa0/2 | 10.76.0.13 | R-Occidente Gi0/0 | 10.76.0.14 | Ethernet (RIPv2) |
+| 5 | 10.76.0.16/30 | CORE-1 Fa0/3 | 10.76.0.17 | MS1 Gi0/1 | 10.76.0.18 | Ethernet |
+| 6 | 10.76.0.20/30 | CORE-2 Fa0/3 | 10.76.0.21 | MS2 Gi0/1 | 10.76.0.22 | Ethernet |
+| 7 | 10.76.0.24/30 | CORE-2 Fa0/2 | 10.76.0.25 | R-Central1 Gi0/0 | 10.76.0.26 | Ethernet |
+| 8 | 10.76.0.28/30 | CORE-3 Gi0/0/0 | 10.76.0.29 | R-Central1 Gi0/0/0 | 10.76.0.30 | **Fibra óptica** |
+| 9 | 10.76.0.32/30 | CORE-3 Se0/1/0 | 10.76.0.33 | R-Norte Se0/0/0 | 10.76.0.34 | **Serial WAN** (EIGRP) |
+| 10 | 10.76.0.36/30 | R-Central1 Gi0/1 | 10.76.0.37 | R-Central2 Gi0/0 | 10.76.0.38 | Ethernet (segmento estático) |
+| 11 | 10.76.0.40/30 | R-Central2 Gi0/1 | 10.76.0.41 | SW-DC-DIST Gi0/1 | 10.76.0.42 | Ethernet (segmento estático) |
+
+De las 64 subredes /30 que caben en el /24 se usan 11. El resto (10.76.0.44 en adelante) queda libre
+para crecer.
+
+### 6.3 Subneteo de las sedes (VLSM)
+
+En cada sede se aplicó **VLSM**: las VLANs se ordenaron de mayor a menor demanda y a cada una se le dio
+el prefijo más pequeño que cubre los hosts requeridos **más las direcciones de gateway**. Esa suma es la
+que define el prefijo en varios casos:
+
+- **Asesores (30 hosts):** un /27 da 30 direcciones utilizables, pero el gateway ocupa una, así que
+  quedarían 29. Por eso se usó **/26**.
+- **Legal (14) y Core_BD (14):** un /28 da 14 utilizables; con el gateway harían falta 15. Por eso se
+  usó **/27**.
+- **Plataforma (60):** con HSRP se necesitan tres direcciones de gateway (IP virtual, MS1 y MS2). Son 63
+  en total, más que las 62 de un /26, así que se usó **/25**.
+- **Bóveda (40):** 40 + 3 = 43 caben en un /26.
+
+#### Occidente
+
+| VLAN | Nombre | Hosts req. | Prefijo | Red | Máscara | Utilizables | Rango utilizable | Broadcast | Gateway | Hosts asignados (7) |
+|---:|---|---:|---:|---|---|---:|---|---|---|---|
+| 12 | Cajas | 45 | /26 | 10.76.10.0 | 255.255.255.192 | 62 | 10.76.10.1 – 10.76.10.62 | 10.76.10.63 | 10.76.10.1 | 10.76.10.2 – 8 |
+| 22 | Asesores | 30 | /26 | 10.76.10.64 | 255.255.255.192 | 62 | 10.76.10.65 – 10.76.10.126 | 10.76.10.127 | 10.76.10.65 | 10.76.10.66 – 72 |
+| 42 | Seguridad | 12 | /28 | 10.76.10.128 | 255.255.255.240 | 14 | 10.76.10.129 – 10.76.10.142 | 10.76.10.143 | 10.76.10.129 | 10.76.10.130 – 136 |
+| 32 | Gerencia | 10 | /28 | 10.76.10.144 | 255.255.255.240 | 14 | 10.76.10.145 – 10.76.10.158 | 10.76.10.159 | 10.76.10.145 | 10.76.10.146 – 152 |
+
+#### Norte
+
+| VLAN | Nombre | Hosts req. | Prefijo | Red | Máscara | Utilizables | Rango utilizable | Broadcast | Gateway | Hosts asignados (7) |
+|---:|---|---:|---:|---|---|---:|---|---|---|---|
+| 52 | Analisis | 50 | /26 | 10.76.20.0 | 255.255.255.192 | 62 | 10.76.20.1 – 10.76.20.62 | 10.76.20.63 | 10.76.20.1 | 10.76.20.2 – 8 |
+| 62 | Auditoria | 25 | /27 | 10.76.20.64 | 255.255.255.224 | 30 | 10.76.20.65 – 10.76.20.94 | 10.76.20.95 | 10.76.20.65 | 10.76.20.66 – 72 |
+| 72 | Legal | 14 | /27 | 10.76.20.96 | 255.255.255.224 | 30 | 10.76.20.97 – 10.76.20.126 | 10.76.20.127 | 10.76.20.97 | 10.76.20.98 – 104 |
+
+#### Oriente
+
+| VLAN | Nombre | Hosts req. | Prefijo | Red | Máscara | Utilizables | Rango utilizable | Broadcast | Gateway | Hosts asignados (7) |
+|---:|---|---:|---:|---|---|---:|---|---|---|---|
+| 92 | Plataforma | 60 | /25 | 10.76.30.0 | 255.255.255.128 | 126 | 10.76.30.1 – 10.76.30.126 | 10.76.30.127 | VIP .1 · MS1 .2 · MS2 .3 | 10.76.30.4 – 10 |
+| 82 | Boveda | 40 | /26 | 10.76.30.128 | 255.255.255.192 | 62 | 10.76.30.129 – 10.76.30.190 | 10.76.30.191 | VIP .129 · MS1 .130 · MS2 .131 | 10.76.30.132 – 138 |
+
+#### Data Center
+
+| VLAN | Nombre | Hosts req. | Prefijo | Red | Máscara | Utilizables | Rango utilizable | Broadcast | Gateway | Hosts asignados (7) |
+|---:|---|---:|---:|---|---|---:|---|---|---|---|
+| 23 | Web_Apps | 28 | /27 | 10.76.40.0 | 255.255.255.224 | 30 | 10.76.40.1 – 10.76.40.30 | 10.76.40.31 | 10.76.40.1 | 10.76.40.2 – 8 |
+| 13 | Core_BD | 14 | /27 | 10.76.40.32 | 255.255.255.224 | 30 | 10.76.40.33 – 10.76.40.62 | 10.76.40.63 | 10.76.40.33 | 10.76.40.34 – 40 |
+| 33 | NOC | 10 | /28 | 10.76.40.64 | 255.255.255.240 | 14 | 10.76.40.65 – 10.76.40.78 | 10.76.40.79 | 10.76.40.65 | 10.76.40.66 – 72 |
+
+En la Sede Oriente las tres direcciones de gateway son la **IP virtual de HSRP**, que es la que se
+configura como gateway en los hosts, y las direcciones reales de MS1 y MS2. Por eso los hosts empiezan
+en la cuarta dirección utilizable (.4 y .132).
+
+### 6.4 Direcciones de cada dispositivo final
+
+Todos los hosts tienen dirección estática, numerada desde la segunda dirección utilizable de su VLAN (la
+primera es el gateway).
+
+<details><summary>Listado completo de los 84 dispositivos finales</summary>
+
+| Host | Tipo | Switch | Puerto | VLAN | IP | Máscara | Gateway |
+|---|---|---|---|---:|---|---|---|
+| PC-ANA-01 | PC-PT | SW-NOR-ACC1 | Fa0/1 | 52 | 10.76.20.2 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-02 | PC-PT | SW-NOR-ACC1 | Fa0/2 | 52 | 10.76.20.3 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-03 | PC-PT | SW-NOR-ACC1 | Fa0/3 | 52 | 10.76.20.4 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-04 | PC-PT | SW-NOR-ACC1 | Fa0/4 | 52 | 10.76.20.5 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-05 | PC-PT | SW-NOR-ACC1 | Fa0/5 | 52 | 10.76.20.6 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-06 | PC-PT | SW-NOR-ACC1 | Fa0/6 | 52 | 10.76.20.7 | 255.255.255.192 | 10.76.20.1 |
+| PC-ANA-07 | PC-PT | SW-NOR-ACC1 | Fa0/7 | 52 | 10.76.20.8 | 255.255.255.192 | 10.76.20.1 |
+| LAP-LEG-01 | Laptop-PT | SW-NOR-ACC1 | Fa0/8 | 72 | 10.76.20.98 | 255.255.255.224 | 10.76.20.97 |
+| LAP-LEG-02 | Laptop-PT | SW-NOR-ACC1 | Fa0/9 | 72 | 10.76.20.99 | 255.255.255.224 | 10.76.20.97 |
+| LAP-LEG-03 | Laptop-PT | SW-NOR-ACC1 | Fa0/10 | 72 | 10.76.20.100 | 255.255.255.224 | 10.76.20.97 |
+| LAP-LEG-04 | Laptop-PT | SW-NOR-ACC1 | Fa0/11 | 72 | 10.76.20.101 | 255.255.255.224 | 10.76.20.97 |
+| PC-AUD-01 | PC-PT | SW-NOR-ACC2 | Fa0/1 | 62 | 10.76.20.66 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-02 | PC-PT | SW-NOR-ACC2 | Fa0/2 | 62 | 10.76.20.67 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-03 | PC-PT | SW-NOR-ACC2 | Fa0/3 | 62 | 10.76.20.68 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-04 | PC-PT | SW-NOR-ACC2 | Fa0/4 | 62 | 10.76.20.69 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-05 | PC-PT | SW-NOR-ACC2 | Fa0/5 | 62 | 10.76.20.70 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-06 | PC-PT | SW-NOR-ACC2 | Fa0/6 | 62 | 10.76.20.71 | 255.255.255.224 | 10.76.20.65 |
+| PC-AUD-07 | PC-PT | SW-NOR-ACC2 | Fa0/7 | 62 | 10.76.20.72 | 255.255.255.224 | 10.76.20.65 |
+| LAP-LEG-05 | Laptop-PT | SW-NOR-ACC2 | Fa0/8 | 72 | 10.76.20.102 | 255.255.255.224 | 10.76.20.97 |
+| LAP-LEG-06 | Laptop-PT | SW-NOR-ACC2 | Fa0/9 | 72 | 10.76.20.103 | 255.255.255.224 | 10.76.20.97 |
+| LAP-LEG-07 | Laptop-PT | SW-NOR-ACC2 | Fa0/10 | 72 | 10.76.20.104 | 255.255.255.224 | 10.76.20.97 |
+| PC-CAJ-01 | PC-PT | SW-OCC-ACC1 | Fa0/1 | 12 | 10.76.10.2 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-02 | PC-PT | SW-OCC-ACC1 | Fa0/2 | 12 | 10.76.10.3 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-03 | PC-PT | SW-OCC-ACC1 | Fa0/3 | 12 | 10.76.10.4 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-04 | PC-PT | SW-OCC-ACC1 | Fa0/4 | 12 | 10.76.10.5 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-05 | PC-PT | SW-OCC-ACC1 | Fa0/5 | 12 | 10.76.10.6 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-06 | PC-PT | SW-OCC-ACC1 | Fa0/6 | 12 | 10.76.10.7 | 255.255.255.192 | 10.76.10.1 |
+| PC-CAJ-07 | PC-PT | SW-OCC-ACC1 | Fa0/7 | 12 | 10.76.10.8 | 255.255.255.192 | 10.76.10.1 |
+| LAP-GER-01 | Laptop-PT | SW-OCC-ACC1 | Fa0/8 | 32 | 10.76.10.146 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-02 | Laptop-PT | SW-OCC-ACC1 | Fa0/9 | 32 | 10.76.10.147 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-03 | Laptop-PT | SW-OCC-ACC1 | Fa0/10 | 32 | 10.76.10.148 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-04 | Laptop-PT | SW-OCC-ACC1 | Fa0/11 | 32 | 10.76.10.149 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-05 | Laptop-PT | SW-OCC-ACC1 | Fa0/12 | 32 | 10.76.10.150 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-06 | Laptop-PT | SW-OCC-ACC1 | Fa0/13 | 32 | 10.76.10.151 | 255.255.255.240 | 10.76.10.145 |
+| LAP-GER-07 | Laptop-PT | SW-OCC-ACC1 | Fa0/14 | 32 | 10.76.10.152 | 255.255.255.240 | 10.76.10.145 |
+| PC-ASE-01 | PC-PT | SW-OCC-ACC2 | Fa0/1 | 22 | 10.76.10.66 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-02 | PC-PT | SW-OCC-ACC2 | Fa0/2 | 22 | 10.76.10.67 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-03 | PC-PT | SW-OCC-ACC2 | Fa0/3 | 22 | 10.76.10.68 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-04 | PC-PT | SW-OCC-ACC2 | Fa0/4 | 22 | 10.76.10.69 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-05 | PC-PT | SW-OCC-ACC2 | Fa0/5 | 22 | 10.76.10.70 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-06 | PC-PT | SW-OCC-ACC2 | Fa0/6 | 22 | 10.76.10.71 | 255.255.255.192 | 10.76.10.65 |
+| PC-ASE-07 | PC-PT | SW-OCC-ACC2 | Fa0/7 | 22 | 10.76.10.72 | 255.255.255.192 | 10.76.10.65 |
+| PC-SEG-01 | PC-PT | SW-OCC-ACC2 | Fa0/8 | 42 | 10.76.10.130 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-02 | PC-PT | SW-OCC-ACC2 | Fa0/9 | 42 | 10.76.10.131 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-03 | PC-PT | SW-OCC-ACC2 | Fa0/10 | 42 | 10.76.10.132 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-04 | PC-PT | SW-OCC-ACC2 | Fa0/11 | 42 | 10.76.10.133 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-05 | PC-PT | SW-OCC-ACC2 | Fa0/12 | 42 | 10.76.10.134 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-06 | PC-PT | SW-OCC-ACC2 | Fa0/13 | 42 | 10.76.10.135 | 255.255.255.240 | 10.76.10.129 |
+| PC-SEG-07 | PC-PT | SW-OCC-ACC2 | Fa0/14 | 42 | 10.76.10.136 | 255.255.255.240 | 10.76.10.129 |
+| PC-BOV-01 | PC-PT | SW-ORI-ACC1 | Fa0/1 | 82 | 10.76.30.132 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-02 | PC-PT | SW-ORI-ACC1 | Fa0/2 | 82 | 10.76.30.133 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-03 | PC-PT | SW-ORI-ACC1 | Fa0/3 | 82 | 10.76.30.134 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-04 | PC-PT | SW-ORI-ACC1 | Fa0/4 | 82 | 10.76.30.135 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-05 | PC-PT | SW-ORI-ACC1 | Fa0/5 | 82 | 10.76.30.136 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-06 | PC-PT | SW-ORI-ACC1 | Fa0/6 | 82 | 10.76.30.137 | 255.255.255.192 | 10.76.30.129 |
+| PC-BOV-07 | PC-PT | SW-ORI-ACC1 | Fa0/7 | 82 | 10.76.30.138 | 255.255.255.192 | 10.76.30.129 |
+| LAP-PLA-01 | Laptop-PT | SW-ORI-ACC2 | Fa0/1 | 92 | 10.76.30.4 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-02 | Laptop-PT | SW-ORI-ACC2 | Fa0/2 | 92 | 10.76.30.5 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-03 | Laptop-PT | SW-ORI-ACC2 | Fa0/3 | 92 | 10.76.30.6 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-04 | Laptop-PT | SW-ORI-ACC2 | Fa0/4 | 92 | 10.76.30.7 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-05 | Laptop-PT | SW-ORI-ACC2 | Fa0/5 | 92 | 10.76.30.8 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-06 | Laptop-PT | SW-ORI-ACC2 | Fa0/6 | 92 | 10.76.30.9 | 255.255.255.128 | 10.76.30.1 |
+| LAP-PLA-07 | Laptop-PT | SW-ORI-ACC2 | Fa0/7 | 92 | 10.76.30.10 | 255.255.255.128 | 10.76.30.1 |
+| SRV-BD-01 | Server-PT | SW-DC-ACC1 | Fa0/1 | 13 | 10.76.40.34 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-02 | Server-PT | SW-DC-ACC1 | Fa0/2 | 13 | 10.76.40.35 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-03 | Server-PT | SW-DC-ACC1 | Fa0/3 | 13 | 10.76.40.36 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-04 | Server-PT | SW-DC-ACC1 | Fa0/4 | 13 | 10.76.40.37 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-05 | Server-PT | SW-DC-ACC1 | Fa0/5 | 13 | 10.76.40.38 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-06 | Server-PT | SW-DC-ACC1 | Fa0/6 | 13 | 10.76.40.39 | 255.255.255.224 | 10.76.40.33 |
+| SRV-BD-07 | Server-PT | SW-DC-ACC1 | Fa0/7 | 13 | 10.76.40.40 | 255.255.255.224 | 10.76.40.33 |
+| SRV-WEB-01 | Server-PT | SW-DC-ACC2 | Fa0/1 | 23 | 10.76.40.2 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-02 | Server-PT | SW-DC-ACC2 | Fa0/2 | 23 | 10.76.40.3 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-03 | Server-PT | SW-DC-ACC2 | Fa0/3 | 23 | 10.76.40.4 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-04 | Server-PT | SW-DC-ACC2 | Fa0/4 | 23 | 10.76.40.5 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-05 | Server-PT | SW-DC-ACC2 | Fa0/5 | 23 | 10.76.40.6 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-06 | Server-PT | SW-DC-ACC2 | Fa0/6 | 23 | 10.76.40.7 | 255.255.255.224 | 10.76.40.1 |
+| SRV-WEB-07 | Server-PT | SW-DC-ACC2 | Fa0/7 | 23 | 10.76.40.8 | 255.255.255.224 | 10.76.40.1 |
+| PC-NOC-01 | PC-PT | SW-DC-ACC3 | Fa0/1 | 33 | 10.76.40.66 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-02 | PC-PT | SW-DC-ACC3 | Fa0/2 | 33 | 10.76.40.67 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-03 | PC-PT | SW-DC-ACC3 | Fa0/3 | 33 | 10.76.40.68 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-04 | PC-PT | SW-DC-ACC3 | Fa0/4 | 33 | 10.76.40.69 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-05 | PC-PT | SW-DC-ACC3 | Fa0/5 | 33 | 10.76.40.70 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-06 | PC-PT | SW-DC-ACC3 | Fa0/6 | 33 | 10.76.40.71 | 255.255.255.240 | 10.76.40.65 |
+| PC-NOC-07 | PC-PT | SW-DC-ACC3 | Fa0/7 | 33 | 10.76.40.72 | 255.255.255.240 | 10.76.40.65 |
+
+</details>
+
+---
