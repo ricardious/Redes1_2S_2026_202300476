@@ -188,3 +188,145 @@ El área *Legal* (VLAN 72) tiene usuarios en los dos switches de acceso de la Se
 demuestra que una misma VLAN atraviesa el anillo por los troncales.
 
 ---
+
+## 5. Backbone nacional
+
+### 5.1 Equipos e interconexión
+
+El núcleo está formado por **tres equipos de capa 3**: `CORE-1`, `CORE-2` y `CORE-3`. Se conectan en
+**triángulo**, así que cada uno tiene dos caminos hacia los otros dos. Si se cae cualquier enlace del
+núcleo, OSPF recalcula por el lado opuesto del triángulo.
+
+- **CORE-1 ↔ CORE-2:** canal principal de transporte, un **EtherChannel de capa 3 con LACP** (`Port-channel1`)
+  formado por `Gi0/1` y `Gi0/2` en ambos extremos. Suma dos enlaces Gigabit bajo una sola IP
+  (10.76.0.0/30) y sigue operando aunque se corte uno de los dos cables.
+- **CORE-1 ↔ CORE-3** y **CORE-2 ↔ CORE-3:** enlaces Ethernet punto a punto.
+- **CORE-3 ↔ R-Central1:** **fibra óptica** sobre módulos `HWIC-1GE-SFP`.
+- **CORE-3 ↔ R-Norte:** **serial WAN**. CORE-3 es el extremo DCE (`clock rate 2000000`).
+
+Los routers de borde se conectan así:
+
+| Sede | Router de borde | Se conecta a | Protocolo en el enlace |
+|---|---|---|---|
+| Occidente | R-Occidente | CORE-1 | RIPv2 |
+| Norte | R-Norte | CORE-3 (serial) | EIGRP 100 |
+| Oriente | MS1 y MS2 | CORE-1 y CORE-2 (uno cada uno) | OSPF |
+| Data Center | R-Central1 | CORE-2 (Ethernet) y CORE-3 (fibra) | OSPF |
+
+R-Central1 y la pareja MS1/MS2 tienen **doble conexión** al núcleo. Si cae un equipo del núcleo, el
+Data Center y la Sede Oriente siguen alcanzables por el otro.
+
+### 5.2 Medios físicos del backbone
+
+| Medio | Enlace | Puertos | Cable en Packet Tracer |
+|---|---|---|---|
+| **Fibra óptica** | CORE-3 ↔ R-Central1 | Gi0/0/0 ↔ Gi0/0/0 | Fiber |
+| **Serial WAN** | CORE-3 ↔ R-Norte | Se0/1/0 (DCE) ↔ Se0/0/0 | Serial DCE |
+| **EtherChannel L3 (Ethernet)** | CORE-1 ↔ CORE-2 | Gi0/1–2 ↔ Gi0/1–2 | Cobre cruzado ×2 |
+| **Ethernet local** | CORE-1 ↔ CORE-3, CORE-2 ↔ CORE-3, núcleo ↔ sedes, R-Central1 ↔ R-Central2 | ver tabla 6.1 | Cobre directo o cruzado |
+
+### 5.3 Dominios de enrutamiento y función de cada uno
+
+| Dominio | Dónde opera | Función dentro de BanTech GT |
+|---|---|---|
+| **OSPF (proceso 1, área 0)** | CORE-1, CORE-2, CORE-3, R-Central1, MS1, MS2 | Protocolo del núcleo. Converge rápido por estado de enlace, elige rutas por costo y balancea entre caminos de igual costo (se ve en las tablas: varias rutas con dos *next-hop*). Todas las demás rutas se inyectan aquí. |
+| **EIGRP (AS 100)** | CORE-3 (Se0/1/0) y R-Norte | Dominio de expansión regional. Corre sobre el enlace WAN serial hacia la Sede Norte. |
+| **RIPv2** | CORE-1 (Fa0/2) y R-Occidente | Dominio de red legada. Una agencia pequeña con un solo camino hacia el núcleo. |
+| **Rutas estáticas** | R-Central1, R-Central2 y SW-DC-DIST | Segmento de alta seguridad del Data Center. No intercambia rutas con nadie: se integra al backbone solo cuando R-Central1 redistribuye sus estáticas. |
+
+Router-ID de OSPF:
+
+| Equipo | Router-ID |
+|---|---|
+| CORE-1 | 1.1.1.1 |
+| CORE-2 | 2.2.2.2 |
+| CORE-3 | 3.3.3.3 |
+| R-Central1 | 4.4.4.4 |
+| MS1 | 5.5.5.5 |
+| MS2 | 6.6.6.6 |
+
+### 5.4 Asignación de protocolos a las sedes
+
+El Data Center ya tenía asignadas las rutas estáticas. Las otras tres sedes se asignaron así:
+
+- **Occidente → RIPv2.** La agencia comercial tiene un único router de borde con cuatro LAN detrás y un
+  solo enlace al núcleo. No hay caminos alternos que elegir, así que la métrica por saltos de RIP es
+  suficiente. RIPv2 es el protocolo más sencillo de administrar, que es justo lo que pide la necesidad
+  operativa (*"fácilmente administrable"*). Además, envía la máscara en sus actualizaciones, lo que
+  permite usar VLSM.
+- **Norte → EIGRP.** La sede llega al núcleo por el enlace WAN serial, que representa la conectividad
+  regional. Corresponde al *"dominio de expansión regional con EIGRP"*. EIGRP tiene en cuenta el ancho
+  de banda y el retardo del enlace serial en su métrica y converge rápido gracias a DUAL. Eso conviene
+  en una sede cuya caída detiene la aprobación de créditos a nivel nacional.
+- **Oriente → OSPF.** El enunciado indica que *"el diseño del backbone ya incluyó dos switches multicapa
+  (MS1 y MS2)"* para esta sede, así que MS1 y MS2 forman parte del núcleo y hablan su mismo protocolo.
+  Cada uno sube a un equipo distinto del núcleo (MS1 a CORE-1 y MS2 a CORE-2). OSPF converge en
+  segundos ante la caída de cualquiera de los dos. Con RIP o con redistribución adicional se perdería
+  parte de la ventaja que da HSRP en esa sede.
+
+### 5.5 Puntos de redistribución
+
+**CORE-1: RIPv2 ↔ OSPF.** Las redes de Occidente entran a OSPF como externas tipo 2 (`O E2`). Hacia
+Occidente, todo el backbone se anuncia por RIP con métrica semilla de 2 saltos.
+
+```
+router ospf 1
+ router-id 1.1.1.1
+ redistribute rip subnets
+ passive-interface FastEthernet0/2
+ network 10.76.0.0 0.0.0.3 area 0
+ network 10.76.0.4 0.0.0.3 area 0
+ network 10.76.0.12 0.0.0.3 area 0
+ network 10.76.0.16 0.0.0.3 area 0
+!
+router rip
+ version 2
+ redistribute ospf 1 metric 2
+ passive-interface default
+ no passive-interface FastEthernet0/2
+ network 10.0.0.0
+ no auto-summary
+```
+
+**CORE-3: EIGRP ↔ OSPF.** Las redes de Norte entran a OSPF como `O E2`. Hacia Norte, el backbone se
+anuncia como `D EX` con métrica semilla `1544 20000 255 1 1500`: ancho de banda de 1544 kbps, retardo
+de 20000 decenas de µs, confiabilidad 255, carga 1 y MTU de 1500.
+
+```
+router eigrp 100
+ redistribute ospf 1 metric 1544 20000 255 1 1500
+ network 10.76.0.32 0.0.0.3
+!
+router ospf 1
+ router-id 3.3.3.3
+ redistribute eigrp 100 subnets
+ passive-interface Serial0/1/0
+ network 10.76.0.4 0.0.0.3 area 0
+ network 10.76.0.8 0.0.0.3 area 0
+ network 10.76.0.28 0.0.0.3 area 0
+ network 10.76.0.32 0.0.0.3 area 0
+```
+
+**R-Central1: estáticas → OSPF.** R-Central1 conoce las VLANs del Data Center por rutas estáticas hacia
+R-Central2 y las publica en OSPF. El resto de las sedes alcanza el Data Center sin que el segmento
+estático participe en ningún protocolo dinámico. Es la *"integración controlada"* que pide el enunciado.
+
+```
+ip route 10.76.40.0  255.255.255.224 10.76.0.38
+ip route 10.76.40.32 255.255.255.224 10.76.0.38
+ip route 10.76.40.64 255.255.255.240 10.76.0.38
+ip route 10.76.0.40  255.255.255.252 10.76.0.38
+!
+router ospf 1
+ router-id 4.4.4.4
+ redistribute static subnets
+ passive-interface GigabitEthernet0/1
+ network 10.76.0.24 0.0.0.3 area 0
+ network 10.76.0.28 0.0.0.3 area 0
+ network 10.76.0.36 0.0.0.3 area 0
+```
+
+La palabra clave `subnets` es necesaria en OSPF. Sin ella solo se redistribuirían redes con clase
+completa y se perderían todas las subredes VLSM.
+
+---
