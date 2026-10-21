@@ -1418,3 +1418,52 @@ Al restaurar el enlace con `no shutdown`, Gi0/1 volvió a ser el puerto raíz y 
 | Los clientes VTP no aprendían las VLANs del servidor | Los clientes se unieron al dominio después de crear las VLANs y no recibieron una revisión nueva | Se configuró `vtp version 2` en el servidor, lo que genera un anuncio con revisión nueva, y los clientes sincronizaron. Servidor y clientes quedaron en la revisión 16 (capturas 22–23) |
 
 ---
+
+## 18. Cómo abrir y verificar el proyecto
+
+1. Abrir [`packet-tracer/Proyecto2_202300476.pkt`](packet-tracer/Proyecto2_202300476.pkt) con Cisco
+   Packet Tracer 9.0.1 o superior.
+2. Esperar unos segundos a que los protocolos converjan, o adelantar el reloj con **Fast Forward Time**
+   en la barra inferior.
+3. Hacer las pruebas básicas:
+   - abrir **PC-CAJ-04 → Desktop → Command Prompt** y ejecutar `ping 10.76.40.34`;
+   - en los routers, ejecutar `show ip route`;
+   - en MS1, ejecutar `show standby brief`.
+4. El primer ping después de abrir el archivo puede perder uno o dos paquetes mientras se resuelve ARP
+   en cada salto. A partir del segundo, todos responden.
+
+---
+
+## 19. Estructura de la entrega
+
+```
+Proyecto2/
+├── README.md                         este manual técnico
+├── packet-tracer/
+│   └── Proyecto2_202300476.pkt       simulación funcional
+└── docs/
+    ├── enunciado/                    enunciado oficial (PDF)
+    ├── img/
+    │   ├── topologia.png             lienzo completo
+    │   ├── topologia-ventana-packet-tracer.png
+    │   └── evidencias/               capturas de CLI y de pruebas (48)
+    ├── scripts/                      script de configuración de cada equipo (21 .cfg)
+    └── evidencias/
+        ├── salidas/                  texto de cada salida capturada
+        └── running-config/           show running-config de cada equipo (21)
+```
+
+Las capturas siguen una numeración por bloque: **1x** backbone, **2x** Occidente, **3x** Norte, **4x**
+Oriente, **5x** Data Center, **6x** pruebas de ping, **7x** HSRP y **8x** STP.
+
+---
+
+## 20. Referencias
+
+- Cisco Networking Academy. *Introduction to Networks (CCNA 1)*. https://www.netacad.com/courses/networking/ccna-introduction-networks
+- Cisco. *Cisco IOS Command Reference*. https://www.cisco.com/c/en/us/support/docs/ios-nx-os-software/ios-software-releases-122-mainline/command-reference-list.html
+- Cisco. *VLAN Configuration Guide*. https://www.cisco.com/c/en/us/support/docs/lan-switching/vlan/10023-3.html
+- Cisco. *EtherChannel Configuration Guide*. https://www.cisco.com/c/en/us/support/docs/lan-switching/etherchannel/12023-4.html
+- Cisco. *Understanding Rapid Spanning Tree Protocol (802.1w)*.
+- Cisco. *Hot Standby Router Protocol Features and Functionality*.
+- Cisco Skills for All. *Packet Tracer Official Tutorials*. https://skillsforall.com/resources/lab-downloads/packet-tracer
