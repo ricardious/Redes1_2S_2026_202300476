@@ -1,0 +1,90 @@
+
+C       10.76.0.4/30 is directly connected, GigabitEthernet0/0
+L       10.76.0.6/32 is directly connected, GigabitEthernet0/0
+C       10.76.0.8/30 is directly connected, GigabitEthernet0/1
+L       10.76.0.10/32 is directly connected, GigabitEthernet0/1
+O       10.76.0.12/30 [110/2] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+O       10.76.0.16/30 [110/2] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+O       10.76.0.20/30 [110/2] via 10.76.0.9, 00:25:17, GigabitEthernet0/1
+O       10.76.0.24/30 [110/2] via 10.76.0.9, 00:25:17, GigabitEthernet0/1
+                      [110/2] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+C       10.76.0.28/30 is directly connected, GigabitEthernet0/0/0
+L       10.76.0.29/32 is directly connected, GigabitEthernet0/0/0
+C       10.76.0.32/30 is directly connected, Serial0/1/0
+L       10.76.0.33/32 is directly connected, Serial0/1/0
+O       10.76.0.36/30 [110/2] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+O E2    10.76.0.40/30 [110/20] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+O E2    10.76.10.0/26 [110/20] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+O E2    10.76.10.64/26 [110/20] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+O E2    10.76.10.128/28 [110/20] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+O E2    10.76.10.144/28 [110/20] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+D       10.76.20.0/26 [90/2172416] via 10.76.0.34, 00:26:09, Serial0/1/0
+D       10.76.20.64/27 [90/2172416] via 10.76.0.34, 00:26:09, Serial0/1/0
+D       10.76.20.96/27 [90/2172416] via 10.76.0.34, 00:26:09, Serial0/1/0
+O       10.76.30.0/25 [110/3] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+                      [110/3] via 10.76.0.9, 00:25:17, GigabitEthernet0/1
+O       10.76.30.128/26 [110/3] via 10.76.0.5, 00:25:17, GigabitEthernet0/0
+                        [110/3] via 10.76.0.9, 00:25:17, GigabitEthernet0/1
+O E2    10.76.40.0/27 [110/20] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+O E2    10.76.40.32/27 [110/20] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+O E2    10.76.40.64/28 [110/20] via 10.76.0.30, 00:25:17, GigabitEthernet0/0/0
+
+CORE-3#
+CORE-3#enable
+CORE-3#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0     10.76.0.6       YES manual up                    up 
+GigabitEthernet0/1     10.76.0.10      YES manual up                    up 
+GigabitEthernet0/2     unassigned      YES unset  administratively down down 
+GigabitEthernet0/0/0   10.76.0.29      YES manual up                    up 
+Serial0/1/0            10.76.0.33      YES manual up                    up 
+Serial0/1/1            unassigned      YES unset  administratively down down 
+Vlan1                  unassigned      YES unset  administratively down down
+CORE-3#show ip eigrp neighbors
+IP-EIGRP neighbors for process 100
+H   Address         Interface      Hold Uptime    SRTT   RTO   Q   Seq
+                                   (sec)          (ms)        Cnt  Num
+0   10.76.0.34      Se0/1/0        12   00:26:15  40     1000  0   39
+
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#
+CORE-3#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0     10.76.0.6       YES manual up                    up 
+GigabitEthernet0/1     10.76.0.10      YES manual up                    up 
+GigabitEthernet0/2     unassigned      YES unset  administratively down down 
+GigabitEthernet0/0/0   10.76.0.29      YES manual up                    up 
+Serial0/1/0            10.76.0.33      YES manual up                    up 
+Serial0/1/1            unassigned      YES unset  administratively down down 
+Vlan1                  unassigned      YES unset  administratively down down
+CORE-3#show ip eigrp neighbors
+IP-EIGRP neighbors for process 100
+H   Address         Interface      Hold Uptime    SRTT   RTO   Q   Seq
+                                   (sec)          (ms)        Cnt  Num
+0   10.76.0.34      Se0/1/0        12   00:26:16  40     1000  0   39
+
+CORE-3#

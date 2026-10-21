@@ -1,0 +1,26 @@
+show etherchannel summary
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 1
+Number of aggregators:           1
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(RU)           LACP   Gig0/1(P) Gig0/2(P) 
+CORE-1#show ip ospf neighbor
+
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+2.2.2.2           1   FULL/DR         00:00:30    10.76.0.2       Port-channel1
+3.3.3.3           1   FULL/DR         00:00:30    10.76.0.6       FastEthernet0/1
+5.5.5.5           1   FULL/DR         00:00:31    10.76.0.18      FastEthernet0/3
+CORE-1#

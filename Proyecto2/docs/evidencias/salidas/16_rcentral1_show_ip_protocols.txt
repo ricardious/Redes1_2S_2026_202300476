@@ -1,0 +1,28 @@
+show ip protocols
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set 
+  Incoming update filter list for all interfaces is not set 
+  Router ID 4.4.4.4
+  It is an autonomous system boundary router
+  Redistributing External Routes from,
+    static 
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    10.76.0.24 0.0.0.3 area 0
+    10.76.0.28 0.0.0.3 area 0
+    10.76.0.36 0.0.0.3 area 0
+  Passive Interface(s): 
+    GigabitEthernet0/1
+  Routing Information Sources:  
+    Gateway         Distance      Last Update 
+    1.1.1.1              110      00:25:22
+    2.2.2.2              110      00:25:22
+    3.3.3.3              110      00:25:27
+    4.4.4.4              110      00:25:27
+    5.5.5.5              110      00:25:27
+    6.6.6.6              110      00:25:27
+  Distance: (default is 110)
+
+R-Central1#
