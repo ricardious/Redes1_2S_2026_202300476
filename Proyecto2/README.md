@@ -1137,3 +1137,70 @@ configuraciones en ejecución, exportadas con `show running-config`, están en
 [`docs/evidencias/running-config/`](docs/evidencias/running-config/).
 
 ---
+
+## 13. Pruebas de convergencia y conectividad
+
+Antes de las pruebas se dejó que los protocolos convergieran. Todas las pruebas se hicieron desde el
+*Command Prompt* de los dispositivos finales.
+
+### 13.1 Ping entre sedes (de extremo a extremo)
+
+| Origen | Destino | Resultado | Captura |
+|---|---|---|---|
+| PC-CAJ-04 (Occidente, VLAN 12) | SRV-WEB-01 10.76.40.2 (Data Center) | 4/4 | [61](docs/img/evidencias/61_occ_ping_entre_sedes.png) |
+| PC-CAJ-04 (Occidente) | PC-ANA-04 10.76.20.5 (Norte) | 4/4 | [61](docs/img/evidencias/61_occ_ping_entre_sedes.png) |
+| PC-CAJ-04 (Occidente) | PC-BOV-01 10.76.30.132 (Oriente) | 4/4 | [61](docs/img/evidencias/61_occ_ping_entre_sedes.png) |
+| PC-ANA-04 (Norte, VLAN 52) | PC-NOC-04 10.76.40.69 (Data Center) | 4/4 | [63](docs/img/evidencias/63_nor_ping_intervlan.png) |
+| PC-ANA-04 (Norte) | PC-CAJ-04 10.76.10.5 (Occidente) | 4/4 | [64](docs/img/evidencias/64_nor_ping_entre_sedes.png) |
+| PC-ANA-04 (Norte) | LAP-PLA-01 10.76.30.4 (Oriente) | 4/4 | [64](docs/img/evidencias/64_nor_ping_entre_sedes.png) |
+| PC-BOV-01 (Oriente, VLAN 82) | 10.76.10.5 / 10.76.20.5 / 10.76.40.34 | 4/4 cada uno | [66](docs/img/evidencias/66_ori_ping_entre_sedes.png) |
+| PC-NOC-04 (Data Center, VLAN 33) | 10.76.10.5 / 10.76.20.69 / 10.76.30.4 | 4/4 cada uno | [68](docs/img/evidencias/68_dc_ping_entre_sedes.png) |
+
+**Occidente → Data Center**, el ejemplo que da el enunciado. El tráfico atraviesa los cuatro dominios:
+sale por RIP, cruza OSPF y entra al segmento estático.
+
+![Ping Occidente a Data Center](docs/img/evidencias/61_occ_ping_entre_sedes.png)
+
+El `tracert` desde la misma PC muestra el camino salto a salto:
+
+![Tracert Occidente a Data Center](docs/img/evidencias/62_occ_tracert_datacenter.png)
+
+| Salto | Dirección | Equipo | Dominio |
+|---:|---|---|---|
+| 1 | 10.76.10.1 | R-Occidente (subinterfaz .12) | RIPv2 |
+| 2 | 10.76.0.13 | CORE-1 | RIPv2 → OSPF |
+| 3 | 10.76.0.6 | CORE-3 | OSPF |
+| 4 | 10.76.0.30 | R-Central1, por la **fibra óptica** | OSPF → estáticas |
+| 5 | 10.76.0.38 | R-Central2 | Estáticas |
+| 6 | 10.76.0.42 | SW-DC-DIST | Estáticas |
+| 7 | 10.76.40.34 | SRV-BD-01 | — |
+
+Las demás capturas entre sedes:
+
+![Ping desde Norte](docs/img/evidencias/64_nor_ping_entre_sedes.png)
+
+![Ping desde Oriente](docs/img/evidencias/66_ori_ping_entre_sedes.png)
+
+![Ping desde el Data Center](docs/img/evidencias/68_dc_ping_entre_sedes.png)
+
+### 13.2 Ping entre VLANs de cada sede (enrutamiento inter-VLAN)
+
+| Sede | Origen | Destinos (otras VLANs de la sede) | Método | Resultado | Captura |
+|---|---|---|---|---|---|
+| Occidente | PC-CAJ-04 (VLAN 12) | 10.76.10.69 (22), 10.76.10.146 (32), 10.76.10.133 (42) | Router-on-a-Stick | 4/4 cada uno | [60](docs/img/evidencias/60_occ_ping_intervlan.png) |
+| Norte | PC-ANA-04 (VLAN 52) | 10.76.20.69 (62), 10.76.20.98 (72) | Router-on-a-Stick | 4/4 cada uno | [63](docs/img/evidencias/63_nor_ping_intervlan.png) |
+| Oriente | PC-BOV-01 (VLAN 82) | 10.76.30.4 (92) | SVIs + HSRP | 4/4 | [65](docs/img/evidencias/65_ori_ping_intervlan.png) |
+| Data Center | PC-NOC-04 (VLAN 33) | 10.76.40.34 (13), 10.76.40.2 (23) | SVIs | 4/4 cada uno | [67](docs/img/evidencias/67_dc_ping_intervlan.png) |
+
+![Inter-VLAN Occidente](docs/img/evidencias/60_occ_ping_intervlan.png)
+
+![Inter-VLAN Norte](docs/img/evidencias/63_nor_ping_intervlan.png)
+
+![Inter-VLAN Oriente](docs/img/evidencias/65_ori_ping_intervlan.png)
+
+En la captura de Oriente, `ipconfig` muestra que el gateway de PC-BOV-01 es **10.76.30.129**, la IP
+virtual de HSRP, y no la dirección real de MS1 ni la de MS2.
+
+![Inter-VLAN Data Center](docs/img/evidencias/67_dc_ping_intervlan.png)
+
+---
