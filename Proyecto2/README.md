@@ -1408,3 +1408,13 @@ Al restaurar el enlace con `no shutdown`, Gi0/1 volvió a ser el puerto raíz y 
 | Tablas de subneteo, IPs asignadas y tabla de VLANs | 6 y 7 |
 
 ---
+
+## 17. Problemas técnicos durante la construcción
+
+| Problema | Causa | Solución |
+|---|---|---|
+| El enlace de fibra no levantaba entre un switch Catalyst 3650 y un router | En Packet Tracer, los puertos SFP del 3650 no establecen enlace de fibra con el router | Se usó un **Cisco 2911 como CORE-3** con el módulo `HWIC-1GE-SFP`, y otro igual en R-Central1. La fibra queda router ↔ router (Gi0/0/0 ↔ Gi0/0/0) |
+| `standby 82 track GigabitEthernet0/1 10` daba error de sintaxis | La versión de IOS del 3560 en Packet Tracer no acepta el decremento en la misma línea | Se configuró `standby 82 track GigabitEthernet0/1` sin número. El decremento por defecto es 10, suficiente para bajar de 105 a 95, por debajo de los 100 de MS2 |
+| Los clientes VTP no aprendían las VLANs del servidor | Los clientes se unieron al dominio después de crear las VLANs y no recibieron una revisión nueva | Se configuró `vtp version 2` en el servidor, lo que genera un anuncio con revisión nueva, y los clientes sincronizaron. Servidor y clientes quedaron en la revisión 16 (capturas 22–23) |
+
+---
