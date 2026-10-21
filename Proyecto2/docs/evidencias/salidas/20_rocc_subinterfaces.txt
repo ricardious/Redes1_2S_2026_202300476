@@ -1,0 +1,88 @@
+
+
+Gateway of last resort is not set
+
+     10.0.0.0/8 is variably subnetted, 28 subnets, 6 masks
+R       10.76.0.0/30 [120/1] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.4/30 [120/1] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.8/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+C       10.76.0.12/30 is directly connected, GigabitEthernet0/0
+L       10.76.0.14/32 is directly connected, GigabitEthernet0/0
+R       10.76.0.16/30 [120/1] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.20/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.24/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.28/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.32/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.36/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.0.40/30 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+C       10.76.10.0/26 is directly connected, GigabitEthernet0/1.12
+L       10.76.10.1/32 is directly connected, GigabitEthernet0/1.12
+C       10.76.10.64/26 is directly connected, GigabitEthernet0/1.22
+L       10.76.10.65/32 is directly connected, GigabitEthernet0/1.22
+C       10.76.10.128/28 is directly connected, GigabitEthernet0/1.42
+L       10.76.10.129/32 is directly connected, GigabitEthernet0/1.42
+C       10.76.10.144/28 is directly connected, GigabitEthernet0/1.32
+L       10.76.10.145/32 is directly connected, GigabitEthernet0/1.32
+R       10.76.20.0/26 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.20.64/27 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.20.96/27 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.30.0/25 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.30.128/26 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.40.0/27 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.40.32/27 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+R       10.76.40.64/28 [120/2] via 10.76.0.13, 00:00:02, GigabitEthernet0/0
+
+R-Occidente>
+R-Occidente>enable
+R-Occidente#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0     10.76.0.14      YES manual up                    up 
+GigabitEthernet0/1     unassigned      YES unset  up                    up 
+GigabitEthernet0/1.12  10.76.10.1      YES manual up                    up 
+GigabitEthernet0/1.22  10.76.10.65     YES manual up                    up 
+GigabitEthernet0/1.32  10.76.10.145    YES manual up                    up 
+GigabitEthernet0/1.42  10.76.10.129    YES manual up                    up 
+GigabitEthernet0/2     unassigned      YES unset  administratively down down 
+Vlan1                  unassigned      YES unset  administratively down down
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#
+R-Occidente#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0     10.76.0.14      YES manual up                    up 
+GigabitEthernet0/1     unassigned      YES unset  up                    up 
+GigabitEthernet0/1.12  10.76.10.1      YES manual up                    up 
+GigabitEthernet0/1.22  10.76.10.65     YES manual up                    up 
+GigabitEthernet0/1.32  10.76.10.145    YES manual up                    up 
+GigabitEthernet0/1.42  10.76.10.129    YES manual up                    up 
+GigabitEthernet0/2     unassigned      YES unset  administratively down down 
+Vlan1                  unassigned      YES unset  administratively down down
+R-Occidente#

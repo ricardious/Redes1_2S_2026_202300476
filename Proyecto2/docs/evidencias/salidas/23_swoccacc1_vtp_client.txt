@@ -1,0 +1,13 @@
+show vtp status
+VTP Version                     : 2
+Configuration Revision          : 16
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 9
+VTP Operating Mode              : Client
+VTP Domain Name                 : bantech76
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Enabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0x6A 0xFA 0xF0 0x08 0x97 0xA9 0x3C 0x7F 
+Configuration last modified by 0.0.0.0 at 3-1-93 00:00:09
+SW-OCC-ACC1#

@@ -1,0 +1,22 @@
+show interfaces trunk
+Port        Mode         Encapsulation  Status        Native vlan
+Fa0/24      on           802.1q         trunking      1
+Gig0/1      on           802.1q         trunking      1
+Gig0/2      on           802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Fa0/24      1-1005
+Gig0/1      1-1005
+Gig0/2      1-1005
+
+Port        Vlans allowed and active in management domain
+Fa0/24      1,12,22,32,42
+Gig0/1      1,12,22,32,42
+Gig0/2      1,12,22,32,42
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Fa0/24      1,12,22,32,42
+Gig0/1      1,12,22,32,42
+Gig0/2      1,12,22,32,42
+
+SW-OCC-DIST#
