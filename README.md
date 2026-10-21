@@ -24,7 +24,16 @@ con su documentación y sus archivos fuente.
 | [**Proyecto 1**](Proyecto1/) | SmartCity Tech Park — VLANs, VTP, STP y EtherChannel (Capas 1 y 2) | 22 pts | Entregado |
 | [**Actividad 5**](Actividad5/) | Enrutamiento Inter-VLAN — Router-on-a-Stick vs. Switch de Capa 3 (SVI) | 1 pt | Entregada |
 | [**Actividad 6**](Actividad6/) | HSRP básico — Redundancia de gateway con OSPF | 1 pt | Entregada |
-| [**Proyecto 2**](Proyecto2/) | BanTech GT — Backbone multiprotocolo, redistribución, HSRP, Rapid PVST+ y EtherChannel | 33 pts | Entregado |
+| [**Proyecto 2**](Proyecto2/) | BanTech GT — Backbone multiprotocolo, redistribución, HSRP, Rapid PVST+ y EtherChannel *(grupal)* | 33 pts | Entregado |
+
+### Integrantes del Proyecto 2
+
+El Proyecto 2 se trabajó en grupo (**Grupo 2**). Los demás trabajos de este repositorio son individuales.
+
+| Estudiante | Carné | Rol |
+|---|---|---|
+| Alex Ricardo Castañeda Rodríguez | 202300476 | Coordinador |
+| Carlos Javier Pérez Pocón | 202206425 | Integrante |
 
 ---
 
