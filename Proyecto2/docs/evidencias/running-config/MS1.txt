@@ -1,0 +1,141 @@
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname MS1
+!
+no profinet
+!
+ip routing
+!
+no ip domain-lookup
+!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 82,92 priority 4096
+!
+interface Port-channel1
+ description Cascada MS1-MS2 EtherChannel LACP
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ description Troncal hacia SW-ORI-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/2
+ description Troncal hacia SW-ORI-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+ description Cascada MS1-MS2 EtherChannel LACP
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface FastEthernet0/24
+ description Cascada MS1-MS2 EtherChannel LACP
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/1
+ description Enlace OSPF hacia CORE-1
+ no switchport
+ ip address 10.76.0.18 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan82
+ description Gateway Boveda (HSRP grupo 82)
+ mac-address 0040.0b0e.3c01
+ ip address 10.76.30.130 255.255.255.192
+ standby version 2
+ standby 82 ip 10.76.30.129
+ standby 82 priority 105
+ standby 82 preempt
+ standby 82 track GigabitEthernet0/1
+!
+interface Vlan92
+ description Gateway Plataforma (HSRP grupo 92)
+ mac-address 0040.0b0e.3c02
+ ip address 10.76.30.2 255.255.255.128
+ standby version 2
+ standby 92 ip 10.76.30.1
+ standby 92 priority 105
+ standby 92 preempt
+ standby 92 track GigabitEthernet0/1
+!
+router ospf 1
+ router-id 5.5.5.5
+ log-adjacency-changes
+ network 10.76.0.16 0.0.0.3 area 0
+ network 10.76.30.0 0.0.0.255 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+banner motd ^CBanTech GT - Acceso restringido. Solo personal autorizado.^C
+!
+line con 0
+ logging synchronous
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+end
+
+
+
