@@ -1,0 +1,20 @@
+show spanning-tree vlan 82
+VLAN0082
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4178
+             Address     0040.0B0E.3C87
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    4178  (priority 4096 sys-id-ext 82)
+             Address     0040.0B0E.3C87
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+Po1              Desg FWD 12        128.27   P2p
+
+MS1#
