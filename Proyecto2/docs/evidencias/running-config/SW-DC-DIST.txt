@@ -1,0 +1,151 @@
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname SW-DC-DIST
+!
+no profinet
+!
+ip routing
+!
+no ip domain-lookup
+!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 13,23,33 priority 4096
+!
+interface Port-channel1
+ description EtherChannel LACP hacia SW-DC-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel2
+ description EtherChannel LACP hacia SW-DC-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel3
+ description EtherChannel LACP hacia SW-DC-ACC3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ description EtherChannel LACP hacia SW-DC-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface FastEthernet0/2
+ description EtherChannel LACP hacia SW-DC-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface FastEthernet0/3
+ description EtherChannel LACP hacia SW-DC-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 2 mode active
+!
+interface FastEthernet0/4
+ description EtherChannel LACP hacia SW-DC-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 2 mode active
+!
+interface FastEthernet0/5
+ description EtherChannel LACP hacia SW-DC-ACC3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 3 mode active
+!
+interface FastEthernet0/6
+ description EtherChannel LACP hacia SW-DC-ACC3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 3 mode active
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ description Enlace hacia R-Central2
+ no switchport
+ ip address 10.76.0.42 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan13
+ description Gateway Core_BD
+ mac-address 000c.852b.3101
+ ip address 10.76.40.33 255.255.255.224
+!
+interface Vlan23
+ description Gateway Web_Apps
+ mac-address 000c.852b.3102
+ ip address 10.76.40.1 255.255.255.224
+!
+interface Vlan33
+ description Gateway NOC
+ mac-address 000c.852b.3103
+ ip address 10.76.40.65 255.255.255.240
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 10.76.0.41 
+!
+ip flow-export version 9
+!
+banner motd ^CBanTech GT - Acceso restringido. Solo personal autorizado.^C
+!
+line con 0
+ logging synchronous
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+end
+
+
+
