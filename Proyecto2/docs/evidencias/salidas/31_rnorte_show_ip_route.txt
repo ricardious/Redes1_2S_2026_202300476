@@ -1,0 +1,41 @@
+show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/8 is variably subnetted, 27 subnets, 6 masks
+D EX    10.76.0.0/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.4/30 [170/7289856] via 10.76.0.33, 00:26:20, Serial0/0/0
+D EX    10.76.0.8/30 [170/7289856] via 10.76.0.33, 00:26:20, Serial0/0/0
+D EX    10.76.0.12/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.16/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.20/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.24/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.28/30 [170/7289856] via 10.76.0.33, 00:26:20, Serial0/0/0
+C       10.76.0.32/30 is directly connected, Serial0/0/0
+L       10.76.0.34/32 is directly connected, Serial0/0/0
+D EX    10.76.0.36/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.0.40/30 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.10.0/26 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.10.64/26 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.10.128/28 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.10.144/28 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+C       10.76.20.0/26 is directly connected, GigabitEthernet0/0.52
+L       10.76.20.1/32 is directly connected, GigabitEthernet0/0.52
+C       10.76.20.64/27 is directly connected, GigabitEthernet0/0.62
+L       10.76.20.65/32 is directly connected, GigabitEthernet0/0.62
+C       10.76.20.96/27 is directly connected, GigabitEthernet0/0.72
+L       10.76.20.97/32 is directly connected, GigabitEthernet0/0.72
+D EX    10.76.30.0/25 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.30.128/26 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.40.0/27 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.40.32/27 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+D EX    10.76.40.64/28 [170/7289856] via 10.76.0.33, 00:25:29, Serial0/0/0
+
+R-Norte#

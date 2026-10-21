@@ -1,0 +1,20 @@
+show spanning-tree vlan 52
+VLAN0052
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4148
+             Address     0002.173A.CD53
+             Cost        4
+             Port        25(GigabitEthernet0/1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32820  (priority 32768 sys-id-ext 52)
+             Address     0001.C98B.9D60
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Gi0/1            Root FWD 4         128.25   P2p
+Gi0/2            Altn BLK 4         128.26   P2p
+
+SW-NOR-ACC2#
