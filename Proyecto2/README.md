@@ -1204,3 +1204,76 @@ virtual de HSRP, y no la dirección real de MS1 ni la de MS2.
 ![Inter-VLAN Data Center](docs/img/evidencias/67_dc_ping_intervlan.png)
 
 ---
+
+## 14. Tablas de enrutamiento de los routers frontera
+
+Las tablas muestran la redistribución con los códigos de cada origen:
+
+| Código | Significado | Ejemplo |
+|---|---|---|
+| `O` | Ruta OSPF interna | Enlaces del backbone, redes de Oriente |
+| `O E2` | Externa tipo 2 en OSPF, **redistribuida** | Redes de Occidente (desde RIP), Norte (desde EIGRP) y Data Center (desde estáticas) |
+| `R` | Ruta RIP | Redes de Occidente en CORE-1, y todo el backbone en R-Occidente |
+| `D` | Ruta EIGRP interna | Redes de Norte en CORE-3 |
+| `D EX` | Externa en EIGRP, **redistribuida** | Todo lo que no es Norte, visto desde R-Norte |
+| `S` / `S*` | Estática / por defecto | Data Center en R-Central1 y R-Central2 |
+
+### 14.1 CORE-1: punto de redistribución RIPv2 ↔ OSPF
+
+![show ip route CORE-1](docs/img/evidencias/11_core1_show_ip_route.png)
+
+CORE-1 aprende por **`R`** las cuatro redes de Occidente (10.76.10.0/26, .64/26, .128/28, .144/28) a
+través de 10.76.0.14. Las de Norte (10.76.20.x) y del Data Center (10.76.40.x) le llegan como
+**`O E2`**, redistribuidas por CORE-3 y R-Central1. Varias rutas tienen dos *next-hop* de igual costo:
+OSPF balancea entre el Po1 y el enlace a CORE-3.
+
+### 14.2 CORE-3: punto de redistribución EIGRP ↔ OSPF
+
+![show ip route CORE-3](docs/img/evidencias/14_core3_show_ip_route.png)
+
+CORE-3 aprende las tres VLANs de Norte por **`D`**, vía Serial0/1/0, con métrica 2172416. Ve las de
+Occidente y del Data Center como **`O E2`**.
+
+### 14.3 R-Central1: punto de redistribución estáticas → OSPF
+
+![show ip route R-Central1](docs/img/evidencias/15_rcentral1_show_ip_route.png)
+
+R-Central1 tiene las tres VLANs del Data Center como **`S`** vía 10.76.0.38. Recibe todo lo demás por
+OSPF, en algunos casos por dos caminos: el Ethernet hacia CORE-2 y la fibra hacia CORE-3. En
+`show ip protocols` aparece *"Redistributing External Routes from, static"*:
+
+![show ip protocols R-Central1](docs/img/evidencias/16_rcentral1_show_ip_protocols.png)
+
+### 14.4 R-Occidente: todo el backbone visto desde RIP
+
+![show ip route R-Occidente](docs/img/evidencias/21_rocc_show_ip_route.png)
+
+Desde R-Occidente, todas las redes externas (backbone, Norte, Oriente y Data Center) aparecen como
+**`R`**. Las redistribuidas desde OSPF llegan con métrica 2, la métrica semilla que asigna CORE-1. Las
+subredes conectadas directamente a CORE-1 (por ejemplo 10.76.0.0/30 y 10.76.0.4/30) llegan con
+métrica 1. Las cuatro VLANs locales aparecen como
+`C` en las subinterfaces Gi0/1.12, .22, .32 y .42.
+
+### 14.5 R-Norte: todo el backbone visto desde EIGRP
+
+![show ip route R-Norte](docs/img/evidencias/31_rnorte_show_ip_route.png)
+
+Desde R-Norte, las redes externas son **`D EX`** (EIGRP externo), con la métrica semilla de CORE-3, y
+las VLANs locales son `C` en Gi0/0.52, .62 y .72.
+
+### 14.6 Otras tablas
+
+| Equipo | Captura |
+|---|---|
+| CORE-2 | [12_core2_show_ip_route.png](docs/img/evidencias/12_core2_show_ip_route.png) |
+| R-Central2 | [17_rcentral2_show_ip_route.png](docs/img/evidencias/17_rcentral2_show_ip_route.png) |
+| MS1 | [43_ms1_show_ip_route.png](docs/img/evidencias/43_ms1_show_ip_route.png) |
+| Vecinos OSPF y EtherChannel L3 de CORE-1 | [10_core1_etherchannel_ospf.png](docs/img/evidencias/10_core1_etherchannel_ospf.png) |
+| Interfaces y vecino EIGRP de CORE-3 | [13_core3_interfaces_eigrp.png](docs/img/evidencias/13_core3_interfaces_eigrp.png) |
+
+![EtherChannel L3 y vecinos OSPF en CORE-1](docs/img/evidencias/10_core1_etherchannel_ospf.png)
+
+`Po1(RU)` indica un Port-channel de **capa 3** (*R = routed*) en uso, formado por Gi0/1 y Gi0/2 con
+LACP. CORE-1 tiene adyacencia `FULL` con CORE-2 (por el Po1), con CORE-3 y con MS1.
+
+---
