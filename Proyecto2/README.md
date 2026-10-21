@@ -538,3 +538,152 @@ la CLI.
 | 33 | NOC | Data Center | 10.76.40.64/28 | 10.76.40.65 | SVI Vlan33 en SW-DC-DIST | ídem |
 
 ---
+
+## 8. Sede Occidente — Agencia Regional Comercial
+
+### 8.1 Topología
+
+```
+                 CORE-1 (Fa0/2)
+                    │  10.76.0.12/30 · RIPv2
+               R-Occidente  Gi0/1 ── subinterfaces .12 .22 .32 .42
+                    │  troncal 802.1Q
+              SW-OCC-DIST  (switch principal · servidor VTP)
+               Gi0/1 │         │ Gi0/2
+          SW-OCC-ACC1           SW-OCC-ACC2       (clientes VTP)
+        Cajas · Gerencia        Asesores · Seguridad
+```
+
+### 8.2 Mapeo lógico
+
+| Equipo | Rol | Troncales 802.1Q | Puertos de acceso |
+|---|---|---|---|
+| R-Occidente | Router de borde, Router-on-a-Stick | Gi0/1 (subinterfaces 12, 22, 32 y 42) | — |
+| **SW-OCC-DIST** | **Switch principal / distribución**, servidor VTP | Fa0/24 → R-Occidente, Gi0/1 → ACC1, Gi0/2 → ACC2 | — |
+| SW-OCC-ACC1 | Acceso, cliente VTP | Gi0/1 → SW-OCC-DIST | Fa0/1–7 VLAN 12 Cajas; Fa0/8–14 VLAN 32 Gerencia |
+| SW-OCC-ACC2 | Acceso, cliente VTP | Gi0/1 → SW-OCC-DIST | Fa0/1–7 VLAN 22 Asesores; Fa0/8–14 VLAN 42 Seguridad |
+
+### 8.3 Justificación de la arquitectura
+
+**Topología física.** Se eligió una **estrella jerárquica de dos niveles**: un switch principal que
+concentra el troncal hacia el router y dos switches de acceso, uno por par de áreas. Es la forma más
+simple de crecer en una agencia. Agregar una caja o un asesor solo requiere un puerto de acceso, y
+agregar un piso solo requiere otro switch de acceso colgado del principal. Las cuatro áreas viven en
+VLANs separadas, así que **un problema en Asesores (VLAN 22), como una tormenta de broadcast o un
+equipo infectado, no llega a la VLAN 12 de Cajas**. Cada VLAN es su propio dominio de broadcast y
+solo se comunica con las demás pasando por el router, donde el tráfico puede controlarse.
+
+**Tolerancia a fallos.** Al separar Cajas y Asesores en switches de acceso distintos, una falla física
+en el switch de Asesores no deja a las cajas sin servicio. La sede no pide redundancia de capa 2, así
+que se priorizó la sencillez. VTP también evita errores de configuración: las VLANs se crean una sola
+vez en el servidor y los clientes no pueden modificarlas, lo que elimina el riesgo de VLANs con nombre
+o ID distintos entre switches.
+
+**Respuesta a la necesidad operativa.** *"Fácilmente administrable"*: Router-on-a-Stick con una sola
+interfaz física, VTP con un único punto de administración de VLANs y RIPv2, que no requiere diseño de
+áreas ni métricas. *"Altamente segmentada"*: cuatro VLANs dimensionadas con VLSM.
+
+### 8.4 Extractos de configuración
+
+**R-Occidente: Router-on-a-Stick y RIPv2**
+
+```
+interface GigabitEthernet0/1
+ description Troncal 802.1Q hacia el switch principal
+ no shutdown
+interface GigabitEthernet0/1.12
+ description Gateway VLAN 12 Cajas
+ encapsulation dot1Q 12
+ ip address 10.76.10.1 255.255.255.192
+interface GigabitEthernet0/1.22
+ description Gateway VLAN 22 Asesores
+ encapsulation dot1Q 22
+ ip address 10.76.10.65 255.255.255.192
+interface GigabitEthernet0/1.32
+ description Gateway VLAN 32 Gerencia
+ encapsulation dot1Q 32
+ ip address 10.76.10.145 255.255.255.240
+interface GigabitEthernet0/1.42
+ description Gateway VLAN 42 Seguridad
+ encapsulation dot1Q 42
+ ip address 10.76.10.129 255.255.255.240
+!
+router rip
+ version 2
+ passive-interface GigabitEthernet0/1.12
+ passive-interface GigabitEthernet0/1.22
+ passive-interface GigabitEthernet0/1.32
+ passive-interface GigabitEthernet0/1.42
+ network 10.0.0.0
+ no auto-summary
+```
+
+Las subinterfaces de las LAN quedan **pasivas**: RIP anuncia esas redes, pero no envía actualizaciones
+hacia los hosts.
+
+**SW-OCC-DIST: servidor VTP, VLANs y troncales**
+
+```
+vtp mode server
+vtp domain bantech76
+vtp password cisco
+vtp version 2
+vlan 12
+ name Cajas
+vlan 22
+ name Asesores
+vlan 32
+ name Gerencia
+vlan 42
+ name Seguridad
+spanning-tree mode rapid-pvst
+spanning-tree vlan 12,22,32,42 priority 4096
+interface FastEthernet0/24
+ description Troncal hacia R-Occidente (router-on-a-stick)
+ switchport mode trunk
+interface GigabitEthernet0/1
+ description Troncal hacia SW-OCC-ACC1
+ switchport mode trunk
+interface GigabitEthernet0/2
+ description Troncal hacia SW-OCC-ACC2
+ switchport mode trunk
+```
+
+**SW-OCC-ACC1: cliente VTP y puertos de acceso**
+
+```
+vtp mode client
+vtp domain bantech76
+vtp password cisco
+interface range FastEthernet0/1 - 7
+ description Hosts VLAN 12 Cajas
+ switchport mode access
+ switchport access vlan 12
+ spanning-tree portfast
+interface range FastEthernet0/8 - 14
+ description Hosts VLAN 32 Gerencia
+ switchport mode access
+ switchport access vlan 32
+ spanning-tree portfast
+interface GigabitEthernet0/1
+ description Troncal hacia SW-OCC-DIST
+ switchport mode trunk
+```
+
+### 8.5 Evidencias de la sede
+
+| Evidencia | Captura |
+|---|---|
+| Subinterfaces del Router-on-a-Stick (`show ip interface brief`) | [20_rocc_subinterfaces.png](docs/img/evidencias/20_rocc_subinterfaces.png) |
+| Servidor VTP: dominio `bantech76`, versión 2, modo Server | [22_swoccdist_vtp_server.png](docs/img/evidencias/22_swoccdist_vtp_server.png) |
+| Cliente VTP con el mismo número de revisión (16) que el servidor | [23_swoccacc1_vtp_client.png](docs/img/evidencias/23_swoccacc1_vtp_client.png) |
+| VLANs aprendidas por VTP en SW-OCC-ACC2 | [24_swoccacc2_vlan_brief.png](docs/img/evidencias/24_swoccacc2_vlan_brief.png) |
+| Troncales 802.1Q del switch principal | [25_swoccdist_trunks.png](docs/img/evidencias/25_swoccdist_trunks.png) |
+
+![VTP servidor](docs/img/evidencias/22_swoccdist_vtp_server.png)
+
+![VTP cliente](docs/img/evidencias/23_swoccacc1_vtp_client.png)
+
+![VLANs en el cliente](docs/img/evidencias/24_swoccacc2_vlan_brief.png)
+
+---
