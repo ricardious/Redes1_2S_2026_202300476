@@ -1277,3 +1277,103 @@ las VLANs locales son `C` en Gi0/0.52, .62 y .72.
 LACP. CORE-1 tiene adyacencia `FULL` con CORE-2 (por el Po1), con CORE-3 y con MS1.
 
 ---
+
+## 15. Pruebas de conmutación por error
+
+### 15.1 HSRP: apagado de la interfaz de MS1
+
+Es la prueba que pide el enunciado: *"al apagar la interfaz de MS1, el tráfico viaja automáticamente
+por MS2 sin que las PCs pierdan conexión"*.
+
+**Procedimiento:**
+
+1. Desde **PC-BOV-04** (VLAN 82) se lanzó `ping -n 60 10.76.40.34` hacia SRV-BD-01 en el Data Center.
+2. Con el ping en curso, en MS1 se ejecutó:
+   ```
+   interface GigabitEthernet0/1
+    shutdown
+   ```
+3. Se dejó terminar el ping y se revisó el estado de HSRP en ambos equipos.
+
+**Resultado del ping:** **60 enviados, 60 recibidos, 0 % de pérdida**.
+
+![Ping continuo durante la falla de MS1](docs/img/evidencias/70_hsrp_ping_durante_falla.png)
+
+**Estado de MS1:** la interfaz quedó *administratively down*. Por el `track`, su prioridad bajó de 105 a
+**95**, y como es menor que la de MS2 (100), MS1 pasó a **Standby**.
+
+![MS1 tras la falla](docs/img/evidencias/71_hsrp_ms1_tras_falla.png)
+
+**Estado de MS2:** asumió el rol **Active** en los dos grupos y atiende las IP virtuales .129 y .1.
+
+![MS2 asume el rol activo](docs/img/evidencias/72_hsrp_ms2_asume_activo.png)
+
+**Camino durante la falla.** Un `tracert` desde la misma PC confirma que el tráfico sale ahora por MS2
+(10.76.30.131) y sube al núcleo por CORE-2 (10.76.0.21):
+
+![Tracert por MS2](docs/img/evidencias/73_hsrp_tracert_por_ms2.png)
+
+**Recuperación.** Al ejecutar `no shutdown` en Gi0/1, MS1 recuperó la prioridad 105 y, gracias a
+`preempt`, volvió a ser el **Active** sin intervención manual:
+
+![MS1 recupera el rol activo](docs/img/evidencias/74_hsrp_ms1_recupera_preempt.png)
+
+### 15.2 HSRP: corte de energía de MS1
+
+La necesidad operativa de la sede habla de un *corte de energía* de MS1, que es más severo que apagar
+una interfaz: desaparecen a la vez el gateway activo, el Root Bridge de las VLANs 82 y 92, y un extremo
+de cada troncal de acceso. Se probó también este caso.
+
+**Procedimiento:** con `ping -n 60 10.76.40.34` en curso desde PC-BOV-04, se apagó MS1 desde su
+interruptor de energía.
+
+**Resultado:** **3 solicitudes sin respuesta** mientras MS2 dejaba de recibir los *hello* de HSRP y los
+switches de acceso pasaban su puerto alterno hacia MS2 a *forwarding*. Después, todas las respuestas
+volvieron y el ping terminó sin más pérdidas.
+
+![Ping durante el corte de energía de MS1](docs/img/evidencias/75_hsrp_ping_corte_energia_ms1.png)
+
+MS2 quedó como **Active** con el standby en *unknown*, porque MS1 está apagado:
+
+![MS2 activo sin MS1](docs/img/evidencias/76_hsrp_ms2_activo_sin_ms1.png)
+
+Al encender MS1, arrancó con la configuración guardada, recuperó el rol **Active** por `preempt` y el
+EtherChannel Po1 volvió a formarse:
+
+![MS1 reencendido](docs/img/evidencias/77_hsrp_ms1_reencendido_activo.png)
+
+### 15.3 Rapid PVST+: caída de un enlace del anillo de la Sede Norte
+
+**Procedimiento:**
+
+1. Desde **PC-AUD-04** (VLAN 62, conectada a SW-NOR-ACC2) se lanzó `ping -n 60 10.76.40.34`.
+2. Con el ping en curso se apagó el enlace principal de ACC2 hacia el switch principal:
+   ```
+   SW-NOR-DIST(config)# interface GigabitEthernet0/2
+   SW-NOR-DIST(config-if)# shutdown
+   ```
+
+**Resultado:** **60 enviados, 60 recibidos, 0 % de pérdida**. Solo una respuesta tardó 183 ms, justo
+durante la transición del puerto alterno, frente a los 2 ms habituales.
+
+![Ping durante la falla del anillo](docs/img/evidencias/80_stp_ping_durante_falla.png)
+
+En SW-NOR-ACC2, el puerto **Gi0/2, que estaba en `Altn BLK`, pasó a `Root FWD`**. El costo hacia la
+raíz subió de 4 a 8 porque ahora el camino pasa por ACC1:
+
+![Puerto alterno activo](docs/img/evidencias/81_stp_acc2_puerto_alterno_activo.png)
+
+Al restaurar el enlace con `no shutdown`, Gi0/1 volvió a ser el puerto raíz y Gi0/2 regresó a
+`Altn BLK`:
+
+![STP recuperado](docs/img/evidencias/82_stp_acc2_recuperado.png)
+
+### 15.4 Resumen de las pruebas de alta disponibilidad
+
+| Prueba | Falla provocada | Paquetes perdidos | Recuperación automática |
+|---|---|---:|---|
+| HSRP, interfaz | `shutdown` en MS1 Gi0/1 | **0 de 60** | Sí: MS2 activo por `track`; MS1 vuelve por `preempt` |
+| HSRP, energía | MS1 apagado por completo | **3 de 60** | Sí: MS2 activo; MS1 vuelve al encenderse |
+| Rapid PVST+ | `shutdown` en SW-NOR-DIST Gi0/2 | **0 de 60** | Sí: ACC2 Gi0/2 de `Altn BLK` a `Root FWD` |
+
+---
